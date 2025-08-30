@@ -2,13 +2,14 @@ title RegistroCE
 
 datos segment
 ;declarar variables aqui------------------------------------------------  
-   
-    mensaje1 db 0Dh,0Ah,"(1) Ingresar nuevo estudiante,(2)Mostrar estadisticas$"
+    
+    
+    mensajeBienvenida db 0Dh,0Ah,"Bienvenido a RegistroCE$"
+    mensaje1 db 0Dh,0Ah,"Digite:(1) Ingresar calificaciones,(2)Mostrar estadisticas$"
     mensaje2 db 0Dh,0Ah,"(3)Buscar estudiante por posicion,(4)Ordenar calificaciones, (5)Salir $"  
     
-    mensajeNombre db 0Dh,0Ah, "Nombre del estudiante: $"
-    mensajeNota db 0Dh,0Ah, "Calificacion: $" 
-    mensajeExito db 0Dh,0Ah, "Calificacion agregada con exito $"
+    mensajeNombre db 0Dh,0Ah, "Ingrese al estudiante o digite 9 para salir al menu principal: $"
+    
     
     bufferNombre db 30,0,30 dup ('$') ;max 30 caracteres
     bufferNota db 9,0,9 dup('$') ;max 9 caracteres
@@ -19,9 +20,10 @@ datos segment
     contadorEst db 0
     
        
-    preguntaSort db 0Dh,0Ah, "(A)scendente o (D)escendente: $" 
-    mensajeResul db 0Dh,0Ah, "Resultado: $"
-    salto db 0Dh,0Ah,"$"
+    preguntaSort db 0Dh,0Ah, "Como desea ordenar las calificaciones: $" 
+    preguntaSort1 db 0Dh,0Ah,"(1) Ascendente, (2) Descendente$"
+    
+    mensajeInvalid db 0Dh,0Ah, "Por favor ingrese un valor valido $"
      
 
     array_notas db 15,2,87,12,4,9,21,10,3,1,65,23,44,19,11
@@ -48,8 +50,14 @@ mov ds,ax
 mov es,ax
 
 ;Aqui comienza el codigo del programa------------------------------------
+                       
+                       
+menu:;mostrar menu principal 
 
-;mostrar menu principal
+mov dx, offset mensajeBienvenida
+mov ah,09h
+int 21h
+
 mov dx, offset mensaje1 
 mov ah,09h
 int 21h 
@@ -75,22 +83,29 @@ je buscar
 cmp al,'4'
 je sort  
 
-jmp exit
+cmp al,'5'
+je exit
+
+jmp invalidMenu
 
   
 
 
 
-ingresar: 
+ingresar:   
+
 mov dx, offset mensajeNombre
 mov ah,09h
 int 21h  
 
 mov dx,offset bufferNombre
 mov ah,0Ah
-int 21h
+int 21h 
 
-;copiar nombre a arreglo
+cmp al,'9'
+
+;copiar nombre a arreglo  
+
 mov si,offset bufferNombre+2
 mov bl,contadorEst
 mov bh,0
@@ -102,34 +117,7 @@ mov cl,[bufferNombre+1]
 xor ch,ch
 rep movsb 
 
-
-
-
-mov dx,offset mensajeNota
-mov ah,09h
-int 21h    
-
-mov dx,offset bufferNota
-mov ah,0Ah
-int 21h
-       
-;copiar nota a arreglo
-mov si,offset bufferNota+2
-mov bl,contadorEst
-mov bh,0
-mov di,offset arrayNotas
-mov ax,16
-mul bx
-add di,ax
-mov cl,[bufferNota+1]
-xor ch,ch
-rep movsb
-
    
-
-
-
-
 
 
 estadisticas:
@@ -139,7 +127,8 @@ buscar:
 
 
 
-sort:  
+sort: 
+ 
 mov dx, offset preguntaSort
 mov ah,09h
 int 21h 
@@ -147,11 +136,13 @@ int 21h
 mov ah,01h
 int 21h 
 
-cmp al,'A'
+cmp al,'1'
 je asc
 
-cmp al,'D'
-je desc
+cmp al,'2'
+je desc  
+
+jmp invalidSort
 
 
 asc:
@@ -217,9 +208,6 @@ jmp print
            
            
 print:
-mov dx, offset mensajeResul  
-mov ah,09h
-int 21h
 
 mov cx,15
 mov si,0
@@ -227,9 +215,6 @@ mov si,0
 print_loop:
 mov al,array_notas[si]
 call print_num
-mov dx,offset salto
-mov ah,09h
-int 21h
 inc si
 loop print_loop
 
@@ -260,6 +245,20 @@ int 21h
 loop pn2 
 pop cx
 ret
+     
+     
+invalidSort:
+mov dx, offset mensajeInvalid
+mov ah, 09h
+int 21h 
+jmp sort  
+
+invalidMenu:
+mov dx, offset mensajeInvalid
+mov ah,09h
+int 21h
+jmp menu
+
 
 
 
