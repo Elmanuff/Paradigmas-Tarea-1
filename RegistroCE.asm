@@ -4,11 +4,16 @@ datos segment
 ;declarar variables aqui------------------------------------------------  
     
     
-    mensajeBienvenida db 0Dh,0Ah,"Bienvenido a RegistroCE$"
-    mensaje1 db 0Dh,0Ah,"Digite:(1) Ingresar calificaciones,(2)Mostrar estadisticas$"
-    mensaje2 db 0Dh,0Ah,"(3)Buscar estudiante por posicion,(4)Ordenar calificaciones, (5)Salir $"  
+    mensajeBienvenida db "Bienvenido a RegistroCE",0Dh,0Ah
+    db "Digite:$"
     
-    mensajeNombre db 0Dh,0Ah, "Ingrese al estudiante o digite 9 para salir al menu principal: $"
+    mensajeMenu db "1. Ingresar calificaciones",0Dh,0Ah
+    db "2. Mostrar estadisticas",0Dh,0Ah
+    db "3. Buscar estudiante por posicion",0Dh,0Ah
+    db "4. Ordenar calificaciones",0Dh,0Ah
+    db "5. Salir$" 
+    
+    mensajeNombre db 0Dh,0Ah, "Por favor ingrese su estudiante o digite 9 para salir al menu principal:$"
     
     
     bufferNombre db 30,0,30 dup ('$') ;max 30 caracteres
@@ -24,6 +29,8 @@ datos segment
     preguntaSort1 db 0Dh,0Ah,"(1) Ascendente, (2) Descendente$"
     
     mensajeInvalid db 0Dh,0Ah, "Por favor ingrese un valor valido $"
+    
+    salto db 0Dh,0Ah, "$"
      
 
     array_notas db 15,2,87,12,4,9,21,10,3,1,65,23,44,19,11
@@ -51,20 +58,21 @@ mov es,ax
 
 ;Aqui comienza el codigo del programa------------------------------------
                        
-                       
-menu:;mostrar menu principal 
-
 mov dx, offset mensajeBienvenida
 mov ah,09h
 int 21h
+call fsalto
 
-mov dx, offset mensaje1 
+
+
+
+;FUNCION MENU                       
+menu: 
+call fsalto
+mov dx, offset mensajeMenu 
 mov ah,09h
 int 21h 
-
-mov dx,offset mensaje2
-mov ah,09h
-int 21h
+call fsalto
          
          
 ;leer opcion
@@ -88,36 +96,71 @@ je exit
 
 jmp invalidMenu
 
-  
 
 
-
-ingresar:   
-
-mov dx, offset mensajeNombre
+;FUNCION INGRESAR
+ingresar:
+mov dx,offset mensajeNombre
 mov ah,09h
-int 21h  
+int 21h
+call fsalto
 
 mov dx,offset bufferNombre
 mov ah,0Ah
-int 21h 
+int 21h
 
+mov al,[bufferNombre+2]
 cmp al,'9'
+je menu
 
-;copiar nombre a arreglo  
-
-mov si,offset bufferNombre+2
-mov bl,contadorEst
-mov bh,0
-mov di,offset arrayNombres
-mov ax,31
-mul bx
-add di,ax
+;Se utiliza el largo del nombre+nota para encontrar el espacio que los divide
+;empezando de atras para adelante
 mov cl,[bufferNombre+1]
-xor ch,ch
-rep movsb 
+mov ch,0
+mov si,offset bufferNombre+2 
+mov bx,si
+add bx,cx                   
+dec bx
+ 
+buscar_espacio:
+cmp byte ptr [bx],' '
+je encontrado
+dec bx
+loop buscar_espacio
 
-   
+
+encontrado:
+mov di,offset arrayNombres
+mov dx,bx                   
+sub dx,si                   
+mov cx,dx
+rep movsb       
+
+mov byte ptr [di],0
+
+;Saltar el espacio
+inc bx
+
+;Suardar Nota
+mov di,offset arrayNotas
+mov dx,si
+add dx,cx                   
+mov cl,[bufferNombre+1]
+mov ch,0
+mov ax, dx   
+sub ax, si   
+sub cx, ax            
+mov si,bx
+rep movsb
+
+inc contadorEst
+
+mov byte ptr [di],0 
+
+jmp ingresar   
+
+
+
 
 
 estadisticas:
@@ -259,8 +302,11 @@ mov ah,09h
 int 21h
 jmp menu
 
-
-
+fsalto:
+mov dx, offset salto
+mov ah,09h
+int 21h
+ret
 
 
 
