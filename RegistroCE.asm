@@ -1,16 +1,16 @@
 title RegistroCE
 
 datos segment
-;declarar variables aqui------------------------------------------------  
+;Variables aqui------------------------------------------------  
     
     
     mensajeBienvenida db "Bienvenido a RegistroCE",0Dh,0Ah
     db "Digite:$"    
-    mensajeMenu db "1. Ingresar calificaciones",0Dh,0Ah
-    db "2. Mostrar estadisticas",0Dh,0Ah
-    db "3. Buscar estudiante por posicion",0Dh,0Ah
-    db "4. Ordenar calificaciones",0Dh,0Ah
-    db "5. Salir$"     
+    mensajeMenu db "1.  Ingresar calificaciones (15 estudiantes -Nombre Apellido1 Apellido2 Nota-)",0Dh,0Ah
+    db "2.  Mostrar estadisticas",0Dh,0Ah
+    db "3.  Buscar estudiante por posicion (indice)",0Dh,0Ah
+    db "4.  Ordenar calificaciones (ascendente/descendente)",0Dh,0Ah
+    db "5.  Salir$"     
     mensajeNombre db 0Dh,0Ah, "Por favor ingrese su estudiante o digite 9 para salir al menu principal:$"
     mensajeSalida db 0Dh,0Ah, "Gracias por usar Registro CE$"
     
@@ -22,8 +22,9 @@ datos segment
                                       
     contadorEst db 0
            
-    preguntaSort db 0Dh,0Ah,"Como desea ordenar las calificaciones:$" 
-    preguntaSort1 db 0Dh,0Ah,"(1) Ascendente, (2) Descendente$"
+    preguntaSort db "Como desea ordenar las calificaciones:",0Dh,0Ah
+    db "1.  Asc",0Dh,0Ah
+    db "2.  Des$" 
     preguntaIndice db 0Dh,0Ah,"Que estudiante desea mostrar:$"
     
     mensajeInvalid db 0Dh,0Ah,"Por favor ingrese un valor valido$"
@@ -55,13 +56,12 @@ mov ax,datos
 mov ds,ax
 mov es,ax
 
-;Aqui comienza el codigo del programa------------------------------------
+;Aqui comienza el codigo del programa
                        
 mov dx, offset mensajeBienvenida
 mov ah,09h
 int 21h
 call fsalto
-
 
 
 
@@ -80,10 +80,10 @@ menu:
     cmp al,'1'
     je ingresar   
     
-    cmp al, '2'
+    cmp al,'2'
     je estadisticas     
     
-    cmp al, '3'
+    cmp al,'3'
     je buscar
     
     cmp al,'4'
@@ -147,6 +147,7 @@ espacio_encontrado:
     cmp cx,31
     jbe nombre_ok
     mov cx,31
+    
 nombre_ok:
     rep movsb
     mov byte ptr [di],'$'
@@ -174,6 +175,7 @@ nombre_ok:
     cmp cx,9
     jbe nota_ok
     mov cx,9
+    
 nota_ok:
     rep movsb
     mov byte ptr [di],'$'
@@ -191,6 +193,7 @@ nota_ok:
 ;FUNCION ESTADISTICAS
 estadisticas:
     call verifyCantidadEst
+
 
 
 ;FUNCION BUSCAR
@@ -234,118 +237,115 @@ buscarLoop:
 
 ;FUNCION SORT
 sort: 
-call verifyCantidadEst 
-mov dx, offset preguntaSort
-mov ah,09h
-int 21h 
-
-mov ah,01h
-int 21h 
-
-cmp al,'1'
-je asc
-
-cmp al,'2'
-je desc  
-
-jmp invalidSort
-
-
+    call verifyCantidadEst 
+    mov dx, offset preguntaSort
+    mov ah,09h
+    int 21h 
+    
+    mov ah,01h
+    int 21h 
+    
+    cmp al,'1'
+    je asc
+    
+    cmp al,'2'
+    je desc  
+    
+    jmp invalidSort
+        
 asc:
-mov cx,14 ;cantidad de comparaciones
-mov si,0
-mov di,0
-
-ciclo1asc:
-push cx
-lea si, array_notas ;pasa la direccion efectiva
-mov di,si 
-
-ciclo2asc:
-inc di;incrementa posicion
-mov al,[si]  
-cmp al, [di]
-ja switch ;short jump
-jb menor
-
-switch: 
-mov ah,[di]
-mov [di],al
-mov [si],ah
-
-menor:   
-inc si
-loop ciclo2asc  
-pop cx
-loop ciclo1asc 
-jmp print
-             
+    mov cx,14 ;cantidad de comparaciones
+    mov si,0
+    mov di,0
+    
+    ciclo1asc:
+    push cx
+    lea si, array_notas ;pasa la direccion efectiva
+    mov di,si 
+    
+    ciclo2asc:
+    inc di;incrementa posicion
+    mov al,[si]  
+    cmp al, [di]
+    ja switch ;short jump
+    jb menor
+    
+    switch: 
+    mov ah,[di]
+    mov [di],al
+    mov [si],ah
+    
+    menor:   
+    inc si
+    loop ciclo2asc  
+    pop cx
+    loop ciclo1asc 
+    jmp print
+                 
 desc:
-mov cx,14
-mov si,0
-mov di,0 
-
-ciclo1desc:
-push cx
-lea si, array_notas
-mov di,si
-
-ciclo2desc:
-inc di
-mov al,[si]
-cmp al, [di]
-jb switchD
-ja mayor
-
-switchD:
-mov ah,[di]
-mov [di],al
-mov [si],ah
-
-mayor:
-inc si
-loop ciclo2desc
-pop cx
-loop ciclo1desc  
-jmp print 
-           
-           
+    mov cx,14
+    mov si,0
+    mov di,0 
+    
+    ciclo1desc:
+    push cx
+    lea si, array_notas
+    mov di,si
+    
+    ciclo2desc:
+    inc di
+    mov al,[si]
+    cmp al, [di]
+    jb switchD
+    ja mayor
+    
+    switchD:
+    mov ah,[di]
+    mov [di],al
+    mov [si],ah
+    
+    mayor:
+    inc si
+    loop ciclo2desc
+    pop cx
+    loop ciclo1desc  
+    jmp print 
+                              
 print:
-mov cx,15
-mov si,0
-
-print_loop:
-call fsalto
-mov al,array_notas[si]
-call print_num
-inc si
-loop print_loop
-
-jmp menu
-
-print_num proc 
-push cx
-xor ah,ah
-mov bx,10
-xor cx,cx 
-
-pn1:
-xor dx,dx
-div bx
-push dx
-inc cx
-cmp ax,0
-jne pn1
-
-
-pn2:
-pop dx
-add dl,'0'
-mov ah,02h
-int 21h
-loop pn2 
-pop cx
-ret
+    mov cx,15
+    mov si,0
+    
+    print_loop:
+    call fsalto
+    mov al,array_notas[si]
+    call print_num
+    inc si
+    loop print_loop
+    
+    jmp menu
+    
+    print_num proc 
+    push cx
+    xor ah,ah
+    mov bx,10
+    xor cx,cx 
+    
+    pn1:
+    xor dx,dx
+    div bx
+    push dx
+    inc cx
+    cmp ax,0
+    jne pn1
+       
+    pn2:
+    pop dx
+    add dl,'0'
+    mov ah,02h
+    int 21h
+    loop pn2 
+    pop cx
+    ret
      
 
 
@@ -392,8 +392,6 @@ mov ah,09h
 int 21h
 call fsalto
 jmp menu
-
-invalidInput:
 
 
 fsalto:
