@@ -5,35 +5,34 @@ datos segment
     
     
     mensajeBienvenida db "Bienvenido a RegistroCE",0Dh,0Ah
-    db "Digite:$"
-    
+    db "Digite:$"    
     mensajeMenu db "1. Ingresar calificaciones",0Dh,0Ah
     db "2. Mostrar estadisticas",0Dh,0Ah
     db "3. Buscar estudiante por posicion",0Dh,0Ah
     db "4. Ordenar calificaciones",0Dh,0Ah
-    db "5. Salir$" 
-    
+    db "5. Salir$"     
     mensajeNombre db 0Dh,0Ah, "Por favor ingrese su estudiante o digite 9 para salir al menu principal:$"
+    mensajeSalida db 0Dh,0Ah, "Gracias por usar Registro CE$"
     
     
-    bufferNombre db 30,0,30 dup ('$') ;max 30 caracteres
-    bufferNota db 9,0,9 dup('$') ;max 9 caracteres
+    bufferEntrada db 39,0,39 dup('$') ;max 39 caracteres
     
-    arrayNombres db 15 dup(31 dup('$'))   
-    arrayNotas db 15 dup (16 dup('$'))
-                                       
+    arrayNombres db 465 dup('0') ;array de 15 espacios para nombres de 31 bytes. 15*31=465   
+    arrayNotas db 150 dup(0) ;array de 15 espacios para notas de 10 bytes. 15*10=150
+                                      
     contadorEst db 0
-    
-       
-    preguntaSort db 0Dh,0Ah, "Como desea ordenar las calificaciones: $" 
+           
+    preguntaSort db 0Dh,0Ah,"Como desea ordenar las calificaciones:$" 
     preguntaSort1 db 0Dh,0Ah,"(1) Ascendente, (2) Descendente$"
+    preguntaIndice db 0Dh,0Ah,"Que estudiante desea mostrar:$"
     
-    mensajeInvalid db 0Dh,0Ah, "Por favor ingrese un valor valido $"
+    mensajeInvalid db 0Dh,0Ah,"Por favor ingrese un valor valido$"
+    mensajeInvalidLleno db 0Dh,0Ah,"Se ha llegado al limite de estudiantes$"
+    mensajeInvalidVacio db 0Dh,0Ah,"No se han ingresado estudiantes$"
     
     salto db 0Dh,0Ah, "$"
      
-
-    array_notas db 15,2,87,12,4,9,21,10,3,1,65,23,44,19,11
+    array_notas db 15,2,87,12,4,9,21,10,3,100,65,23,44,19,11
 
 datos ends
 ;-----------------------------------------------------------------------
@@ -68,110 +67,174 @@ call fsalto
 
 ;FUNCION MENU                       
 menu: 
-call fsalto
-mov dx, offset mensajeMenu 
-mov ah,09h
-int 21h 
-call fsalto
-         
-         
-;leer opcion
-mov ah,01h
-int 21h       
- 
-cmp al,'1'
-je ingresar   
-
-cmp al, '2'
-je estadisticas     
-
-cmp al, '3'
-je buscar
-
-cmp al,'4'
-je sort  
-
-cmp al,'5'
-je exit
-
-jmp invalidMenu
+    call fsalto
+    mov dx, offset mensajeMenu 
+    mov ah,09h
+    int 21h 
+    call fsalto
+                      
+    ;leer opcion
+    mov ah,01h
+    int 21h       
+     
+    cmp al,'1'
+    je ingresar   
+    
+    cmp al, '2'
+    je estadisticas     
+    
+    cmp al, '3'
+    je buscar
+    
+    cmp al,'4'
+    je sort  
+    
+    cmp al,'5'
+    je exit
+    
+    jmp invalidMenu
 
 
 
 ;FUNCION INGRESAR
 ingresar:
-mov dx,offset mensajeNombre
-mov ah,09h
-int 21h
-call fsalto
+    mov dx,offset mensajeNombre
+    mov ah,09h
+    int 21h
+    call fsalto
 
-mov dx,offset bufferNombre
-mov ah,0Ah
-int 21h
+    mov dx,offset bufferEntrada
+    mov ah,0Ah
+    int 21h
 
-mov al,[bufferNombre+2]
-cmp al,'9'
-je menu
+    ;salir si se escribe '9'
+    mov al,[bufferEntrada+2]
+    cmp al,'9'
+    je menu
 
-;Se utiliza el largo del nombre+nota para encontrar el espacio que los divide
-;empezando de atras para adelante
-mov cl,[bufferNombre+1]
-mov ch,0
-mov si,offset bufferNombre+2 
-mov bx,si
-add bx,cx                   
-dec bx
- 
+    ;buscar espacio
+    mov cl,[bufferEntrada+1] ;longitud texto
+    mov ch,0
+    mov si,offset bufferEntrada+2 ;inicio del texto
+    mov bx,si
+    add bx,cx ;fin del texto
+    dec bx                         
+
 buscar_espacio:
-cmp byte ptr [bx],' '
-je encontrado
-dec bx
-loop buscar_espacio
+    cmp byte ptr [bx],' '
+    je espacio_encontrado
+    dec bx
+    loop buscar_espacio
+    
+    jmp invalidLleno;si no hay espacio se devuelve al menu
 
+espacio_encontrado:
+    mov dx,bx
+    sub dx,si ;con esta resta se obtiene la longitud nombre
+    mov cx,dx
 
-encontrado:
-mov di,offset arrayNombres
-mov dx,bx                   
-sub dx,si                   
-mov cx,dx
-rep movsb       
+    ;calcular donde debe ir en el array
+    mov al,contadorEst
+    xor ah,ah
+    mov dl,31 ;cada nombre ocupa 31 bytes
+    mul dl
+    mov di,offset arrayNombres
+    add di,ax
 
-mov byte ptr [di],0
+    ;guardar nombre en array
+    mov si,offset bufferEntrada+2
+    ;limitar longitud a 31 caracteres
+    cmp cx,31
+    jbe nombre_ok
+    mov cx,31
+nombre_ok:
+    rep movsb
+    mov byte ptr [di],'$'
 
-;Saltar el espacio
-inc bx
+    ;copiar nota
+    inc bx ;primer caracter de la nota
+    mov si,bx
 
-;Suardar Nota
-mov di,offset arrayNotas
-mov dx,si
-add dx,cx                   
-mov cl,[bufferNombre+1]
-mov ch,0
-mov ax, dx   
-sub ax, si   
-sub cx, ax            
-mov si,bx
-rep movsb
+    mov cl,[bufferEntrada+1] ;longitud total
+    mov ch,0
+    mov dx,offset bufferEntrada+2
+    add dx,cx ;fin del texto
+    sub dx,bx ;longitud nota
+    mov cx,dx
 
-inc contadorEst
+    ; calcular destino en arrayNotas
+    mov al,contadorEst
+    xor ah,ah
+    mov dl,10 ;cada nota ocupa 10 bytes
+    mul dl                    
+    mov di,offset arrayNotas
+    add di,ax
 
-mov byte ptr [di],0 
+    ;limitar longitud nota a 9 caracteres
+    cmp cx,9
+    jbe nota_ok
+    mov cx,9
+nota_ok:
+    rep movsb
+    mov byte ptr [di],'$'
 
-jmp ingresar   
+    ;incrementar contador de estudiantes
+    inc contadorEst
+    cmp contadorEst,15 ;si son menos de 15 estudiantes
+    jb ingresar ;continuar ingresando
 
+    dec contadorEst ;evitar que se pase
+    jmp invalidLleno
 
+   
 
-
-
+;FUNCION ESTADISTICAS
 estadisticas:
+    call verifyCantidadEst
 
 
+;FUNCION BUSCAR
 buscar:
+    call verifyCantidadEst
+    mov dx,offset preguntaIndice
+    mov ah,09h
+    int 21h
+    call fsalto
+    
+    mov cl,contadorEst
+    mov ch,0
+    mov si, offset arrayNombres
+    mov di, offset arrayNotas
+    cmp contadorEst,0
+    jg buscarloop
+    
+    jmp menu
 
-
-
-sort: 
+buscarLoop:    
+    call fsalto
+    
+    ;imprimir nombre
+    mov dx, si
+    mov ah, 09h
+    int 21h
+    
+    ;imprimir nota
+    mov dx, di
+    mov ah, 09h
+    int 21h
+    
+    add si,31
+    add di,10
+    
+    loop buscarloop
+    
+    jmp menu
  
+ 
+
+;FUNCION SORT
+sort: 
+call verifyCantidadEst 
 mov dx, offset preguntaSort
 mov ah,09h
 int 21h 
@@ -210,16 +273,13 @@ mov ah,[di]
 mov [di],al
 mov [si],ah
 
-
 menor:   
 inc si
 loop ciclo2asc  
 pop cx
 loop ciclo1asc 
 jmp print
-
-
-              
+             
 desc:
 mov cx,14
 mov si,0
@@ -251,19 +311,17 @@ jmp print
            
            
 print:
-
 mov cx,15
 mov si,0
 
 print_loop:
+call fsalto
 mov al,array_notas[si]
 call print_num
 inc si
 loop print_loop
 
-;salir
-mov ah,4Ch
-int 21h
+jmp menu
 
 print_num proc 
 push cx
@@ -289,6 +347,25 @@ loop pn2
 pop cx
 ret
      
+
+
+;FUNCION EXIT
+exit:
+    mov dx, offset mensajeSalida
+    mov ah,09h
+    int 21h
+
+    mov ah, 4Ch      
+    mov al, 0         
+    int 21h           
+
+
+
+;FUNCIONES DE CONDICIONES
+verifyCantidadEst:
+cmp contadorEst,0
+je invalidVacio
+ret
      
 invalidSort:
 mov dx, offset mensajeInvalid
@@ -302,6 +379,23 @@ mov ah,09h
 int 21h
 jmp menu
 
+invalidLleno:
+mov dx, offset mensajeInvalidLleno
+mov ah,09h
+int 21h
+call fsalto
+jmp menu
+
+invalidVacio:
+mov dx, offset mensajeInvalidVacio
+mov ah,09h
+int 21h
+call fsalto
+jmp menu
+
+invalidInput:
+
+
 fsalto:
 mov dx, offset salto
 mov ah,09h
@@ -309,9 +403,6 @@ int 21h
 ret
 
 
-
-
-exit:
 print_num endp
 codigo ends
 end inicio
