@@ -17,7 +17,9 @@ datos segment
     mensajeReprobados db "Reprobados Cantidad: $",0Dh,0Ah
     mensajePorcentaje db " Porcentaje: $",0Dh,0Ah 
     mensajePromedio db "Promedio: $",0Dh,0Ah
-    cien db 100
+    cien db 100 
+    mensajeMaxima db "Nota maxima: $",0Dh,0Ah
+    mensajeMinima db "Nota minima: $",0Dh,0Ah
     
     
     bufferEntrada db 39,0,39 dup('$') ;max 39 caracteres
@@ -47,7 +49,11 @@ datos segment
     arrayNotas_num dw 15 dup(0) 
     sumaNotas dw 0  
     
-    promedio dw 0
+    promedio dw 0 
+    
+    notaMax dw 0
+    notaMin dw 0 
+    
 
 datos ends
 ;-----------------------------------------------------------------------
@@ -208,7 +214,10 @@ estadisticas:
     ;Inicializar contadores en memoria
     mov word ptr [aprobados], 0
     mov word ptr [reprobados], 0 
-    mov word ptr [sumaNotas],0
+    mov word ptr [sumaNotas],0 
+    mov word ptr [notaMax],0
+    mov word ptr [notaMin],101
+    
 
     ;Puntero al primer bloque de notas (ascii)
     mov si, offset arrayNotas
@@ -223,12 +232,26 @@ contar_loop:
     mov cx, 9  ;max caracteres  
     call leerNota
     
-
-parsed_note:
-    mov bx,[sumaNotas]  ;acumular la nota
+    
+    ;acumular suma
+    mov bx,[sumaNotas] 
     add bx,ax
-    mov [sumaNotas],bx
-
+    mov [sumaNotas],bx 
+    
+    ;actualizar nota maxima
+    mov bx,[notaMax]
+    cmp ax,bx
+    jle noActualizar_max
+    mov [notaMax],ax
+    
+noActualizar_max:
+    ;actualiza nota minima
+    mov bx,[notaMin]
+    cmp ax,bx
+    jge noActualizar_min
+    mov [notaMin],ax
+    
+noActualizar_min:
 
     cmp ax, 70
     jl marcar_reprobado
@@ -246,7 +269,7 @@ marcar_reprobado:
 siguiente_est:
     add si, 10      ;pasar al siguiente bloque de 10 bytes
     dec bp
-    jnz contar_loop  
+    jnz contar_loop 
     
     
     
@@ -277,6 +300,24 @@ siguiente_est:
     
     mov ax,[promedio]
     
+    call print_num 
+    
+    
+    ;mostrar nota maxima
+    call fsalto
+    mov dx,offset mensajeMaxima
+    mov ah,09h
+    int 21h
+    mov ax,[notaMax]
+    call print_num
+    
+    
+    ;mostrar nota minima
+    call fsalto
+    mov dx,offset mensajeMinima
+    mov ah,09h
+    int 21h
+    mov ax,[notaMin]
     call print_num
     
 
@@ -813,36 +854,6 @@ invalidFormato:
 
 invalidLleno:
     mov dx, offset mensajeInvalidLleno
-    mov ah,09h
-    int 21h
-    call fsalto
-    jmp menu
-
-invalidVacio:
-    mov dx, offset mensajeInvalidVacio
-    mov ah,09h
-    int 21h
-    call fsalto
-    jmp menu
-
-
-fespacio:
-    mov dx, offset espacio
-    mov ah,09h
-    int 21h
-    ret
-
-fsalto:
-    mov dx, offset salto
-    mov ah,09h
-    int 21h
-    ret
-
-
-codigo ends
-end inicio
-
- offset mensajeInvalidLleno
     mov ah,09h
     int 21h
     call fsalto
