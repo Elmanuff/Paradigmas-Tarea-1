@@ -34,14 +34,16 @@ datos segment
     mensajeInvalid db 0Dh,0Ah,"Por favor ingrese un valor valido$"
     mensajeInvalidLleno db 0Dh,0Ah,"Se ha llegado al limite de estudiantes$"
     mensajeInvalidVacio db 0Dh,0Ah,"No se han ingresado estudiantes$"
+    mensajeInvalidFormato db 0Dh,0Ah, "Entrada invalida. Utilice el formato -Nombre Apellido 1 Apellido 2 Nota-$"
+    
     
     salto db 0Dh,0Ah, "$"
     
     aprobados dw 0
-    reprobados dw 0
-    total_notas dw 15 ;TEMPORAL
-     
-    array_notas db 15,92,87,12,70,9,21,10,3,100,65,23,44,19,11
+    reprobados dw 0  
+    
+    arrayNotas_num dw 15 dup(0)
+    
 
 datos ends
 ;-----------------------------------------------------------------------
@@ -122,7 +124,10 @@ ingresar:
 
     ;buscar espacio
     mov cl,[bufferEntrada+1] ;longitud texto
-    mov ch,0
+    mov ch,0  
+    cmp cl,0
+    je invalidFormato ;si no se introdujo nada
+    
     mov si,offset bufferEntrada+2 ;inicio del texto
     mov bx,si
     add bx,cx ;fin del texto
@@ -134,7 +139,7 @@ buscar_espacio:
     dec bx
     loop buscar_espacio
     
-    jmp invalidLleno;si no hay espacio se devuelve al menu
+    jmp invalidFormato ;no se cumple el formato
 
 espacio_encontrado:
     mov dx,bx
@@ -150,15 +155,11 @@ espacio_encontrado:
     add di,ax
 
     ;guardar nombre en array
-    mov si,offset bufferEntrada+2
-    ;limitar longitud a 31 caracteres
-    cmp cx,31
-    jbe nombre_ok
-    mov cx,31
+    mov si,offset bufferEntrada+2  
     
-nombre_ok:
     rep movsb
     mov byte ptr [di],'$'
+    
 
     ;copiar nota
     inc bx ;primer caracter de la nota
@@ -179,14 +180,9 @@ nombre_ok:
     mov di,offset arrayNotas
     add di,ax
 
-    ;limitar longitud nota a 9 caracteres
-    cmp cx,9
-    jbe nota_ok
-    mov cx,9
-    
-nota_ok:
     rep movsb
     mov byte ptr [di],'$'
+   
 
     ;incrementar contador de estudiantes
     inc contadorEst
@@ -200,31 +196,73 @@ nota_ok:
 
 ;FUNCION ESTADISTICAS
 estadisticas:
-
     call fsalto
-    xor cx, cx        ; CX = aprobados
-    xor dx, dx        ; DX = reprobados
-    mov si, offset array_notas
-    mov di, 15        ; contador de 15 notas
+    call verifyCantidadEst  
 
-    contar_loop:
-    mov al, [si]
-    cmp al, 70
-    jl es_reprobado
-    inc cx
-    jmp siguiente
-    es_reprobado:
-    inc dx
-    siguiente:
-    inc si
-    dec di
+    ;Inicializar contadores en memoria
+    mov word ptr [aprobados], 0
+    mov word ptr [reprobados], 0
+
+    ;Puntero al primer bloque de notas (ascii)
+    mov si, offset arrayNotas
+
+    mov al, [contadorEst]
+    xor ah, ah
+    mov bp, ax   ;bp= numero de estudiantes
+
+contar_loop:
+    xor ax, ax  ;Acumulador de la nota actual
+    mov di, si  ;Apunta al inicio de la nota actual
+    mov cx, 9  ;max caracteres
+
+parse_loop:
+    mov bl, [di]        ;caracter actual  
+    cmp bl, '$'         ;fin de la cadena
+    je parsed_note
+    
+    cmp bl, '0'
+    jb skip_char 
+    
+    cmp bl, '9'
+    ja skip_char
+
+    ;convertir a numero (ax=ax*10+(bl-'0')
+    mov dx, ax          
+    shl dx, 1
+    shl dx, 1
+    shl dx, 1          ; DX = AX * 8
+    shl ax, 1          ; AX = AX * 2
+    add ax, dx         ; AX = AX*10
+
+    sub bl, '0'        
+    xor bh, bh
+    add ax, bx
+
+skip_char:
+    inc di
+    dec cx
+    jnz parse_loop
+
+parsed_note:
+    cmp ax, 70
+    jl marcar_reprobado
+
+    mov bx, [aprobados]
+    inc bx
+    mov [aprobados], bx
+    jmp siguiente_est
+
+marcar_reprobado:
+    mov bx, [reprobados]
+    inc bx
+    mov [reprobados], bx
+
+siguiente_est:
+    add si, 10      ; pasar al siguiente bloque de 10 bytes
+    dec bp
     jnz contar_loop
 
-    ; guardar en memoria (asegúrate de haber declarado estas vars en datos)
-    mov [aprobados], cx
-    mov [reprobados], dx
-
-    ; --- MOSTRAR APROBADOS ---
+    ;MOSTRAR APROBADOS
     call fsalto
     mov dx, offset mensajeAprobados
     mov ah, 09h
@@ -233,25 +271,26 @@ estadisticas:
     mov ax, [aprobados]
     call print_num
 
-    ; --- CALCULAR PORCENTAJE DE APROBADOS ---
+    ;PORCENTAJE APROBADOS
     mov ax, [aprobados]
-    mov cx, 100
-    mul cx              
-    mov bx,15
-    div bx
-    
+    mov bx, 100
+    mul bx              ; DX:AX = aprobados * 100
+    mov bl, [contadorEst]
+    xor bh, bh
+    div bx              ; AX = (aprobados*100)/contadorEst
+
     push ax
-    mov dx,offset mensajePorcentaje
-    mov ah,09h
+    mov dx, offset mensajePorcentaje
+    mov ah, 09h
     int 21h
     pop ax
     call print_num
-    mov dl,'%'
-    mov ah,02h
+    mov dl, '%'
+    mov ah, 02h
     int 21h
-    call fsalto              
+    call fsalto
 
-    ; --- MOSTRAR REPROBADOS ---
+    ;MOSTRAR REPROBADOS
     mov dx, offset mensajeReprobados
     mov ah, 09h
     int 21h
@@ -259,26 +298,27 @@ estadisticas:
     mov ax, [reprobados]
     call print_num
 
-    ; --- PORCENTAJE REPROBADOS ---   
-    mov ax,[reprobados]
-    mov cx,100
-    mul cx
-    mov bx,15
+    ;PORCENTAJE REPROBADOS
+    mov ax, [reprobados]
+    mov bx, 100
+    mul bx
+    mov bl, [contadorEst]
+    xor bh, bh
     div bx
-    
+
     push ax
-    mov dx,offset mensajePorcentaje
-    mov ah,09h
+    mov dx, offset mensajePorcentaje
+    mov ah, 09h
     int 21h
     pop ax
     call print_num
-    mov dl,'%'
+    mov dl, '%'
     mov ah,02h
     int 21h
     call fsalto
-    
 
     jmp menu
+
 
     
                   
@@ -293,37 +333,58 @@ buscar:
     mov dx,offset preguntaIndice
     mov ah,09h
     int 21h
+    
+    ;leer un caracter (1-15) solo un digito por ahora
+    mov ah,01h
+    int 21h
+    sub al,'0'  ;convertir ASCII a numero
+    mov bl,al   ;guardar en BL
+    
+    ;validar que sea >=1
+    cmp bl,1 
+    jb invalidBuscar
+    
+    ;validar que sea <= contadorEst
+    mov al,contadorEst
+    cmp bl,al
+    ja invalidBuscar 
+    
+    
+    ;calcular direccion del nombre 
+    dec bl  ;porque el indice empieza en 1
+    mov bh,0
+    mov ax,bx   ;AX=indice-1
+    mov dl,31
+    mul dl  ;AX=(indice-1)*31
+    mov si,offset arrayNombres
+    add si,ax   ;SI apunta al nombre
+    
+    ;mostrar nombre
+    mov dx,si
+    mov ah,09h
+    int 21h
     call fsalto
     
-    mov cl,contadorEst
-    mov ch,0
-    mov si, offset arrayNombres
-    mov di, offset arrayNotas
-    cmp contadorEst,0
-    jg buscarloop
+    ;calcular direccion de la nota   
+    mov ax,bx
+    mov dl,10
+    mul dl  ;AX=(indice-1)*10 
+    mov si,offset arrayNotas
+    add si,ax
     
-    jmp menu
-
-buscarLoop:    
+    ;mostrar nota
+    mov dx,si
+    mov ah,09h
+    int 21h
     call fsalto
     
-    ;imprimir nombre
-    mov dx, si
-    mov ah, 09h
-    int 21h
-    
-    ;imprimir nota
-    mov dx, di
-    mov ah, 09h
-    int 21h
-    
-    add si,31
-    add di,10
-    
-    loop buscarloop
-    
     jmp menu
- 
+    
+    
+    
+    
+    
+    
  
 
 ;FUNCION SORT
@@ -343,100 +404,251 @@ sort:
     je desc  
     
     jmp invalidSort
-        
+
+;ORDEN ASCENDENTE
 asc:
-    mov cx,14 ;cantidad de comparaciones
-    mov si,0
-    mov di,0
-    
-    ciclo1asc:
+    mov cl, [contadorEst]
+    dec cl                 
+    jz print_sort         
+    mov ch,0
+    mov bx,cx             
+
+outer_loop_asc:
+    mov si,0               
+inner_loop_asc:
+    push bx
     push cx
-    lea si, array_notas ;pasa la direccion efectiva
-    mov di,si 
+    push si
+
     
-    ciclo2asc:
-    inc di;incrementa posicion
-    mov al,[si]  
-    cmp al, [di]
-    ja switch ;short jump
-    jb menor
+    mov di, offset arrayNotas
+    mov bl, [contadorEst]
+    xor bh,bh
     
-    switch: 
-    mov ah,[di]
-    mov [di],al
-    mov [si],ah
-    
-    menor:   
-    inc si
-    loop ciclo2asc  
-    pop cx
-    loop ciclo1asc 
-    jmp print
-                 
-desc:
-    mov cx,14
-    mov si,0
-    mov di,0 
-    
-    ciclo1desc:
-    push cx
-    lea si, array_notas
-    mov di,si
-    
-    ciclo2desc:
-    inc di
-    mov al,[si]
-    cmp al, [di]
-    jb switchD
-    ja mayor
-    
-    switchD:
-    mov ah,[di]
-    mov [di],al
-    mov [si],ah
-    
-    mayor:
-    inc si
-    loop ciclo2desc
-    pop cx
-    loop ciclo1desc  
-    jmp print 
-                              
-print:
-    mov cx,15
-    mov si,0
-    
-    print_loop:
-    call fsalto
-    mov al,array_notas[si]
-    call print_num
-    inc si
-    loop print_loop
-    
-    jmp menu
-    
-    print_num proc 
-    push cx
-    xor ah,ah
+    mov ax, si
     mov bx,10
-    xor cx,cx 
+    mul bx
+    add di, ax
+    call convertirNota     
+
+    mov dx, ax              
+
     
-    pn1:
-    xor dx,dx
-    div bx
-    push dx
-    inc cx
-    cmp ax,0
-    jne pn1
-       
-    pn2:
-    pop dx
-    add dl,'0'
+    pop si
+    inc si
+    push si
+
+    mov di, offset arrayNotas
+    mov ax, si
+    mov bx,10
+    mul bx
+    add di, ax
+    call convertirNota      
+
+    cmp dx, ax
+    jbe no_swap_asc
+
+    
+    pop si
+    dec si
+    push si
+
+  
+    mov di, offset arrayNombres
+    mov ax, si
+    mov bx,31
+    mul bx
+    add di, ax
+    mov si, di
+
+   
+    mov di, offset arrayNombres
+    mov ax, si
+    inc ax
+    mov bx,31
+    mul bx
+    add di, ax
+
+    mov cx,31
+    call swap_block
+
+   
+    pop si
+    dec si
+    push si
+
+    mov di, offset arrayNotas
+    mov ax, si
+    mov bx,10
+    mul bx
+    add di, ax
+    mov si, di
+
+    mov di, offset arrayNotas
+    mov ax, si
+    inc ax
+    mov bx,10
+    mul bx
+    add di, ax
+
+    mov cx,10
+    call swap_block
+
+no_swap_asc:
+    pop si
+    dec si
+    pop cx
+    pop bx
+    loop inner_loop_asc
+    dec bx
+    jnz outer_loop_asc
+    jmp print_sort
+
+;ORDEN DESCENDENTE
+desc:
+  
+    jmp print_sort
+
+print_sort:
+    mov cl, [contadorEst]
+    mov ch,0
+    mov si,0
+
+print_loop:
+    call fsalto
+
+    ; imprimir nombre[i]
+    mov di, offset arrayNombres
+    mov ax, si
+    mov bx,31
+    mul bx
+    add di, ax
+    mov dx, di
+    mov ah,09h
+    int 21h
+
+    ; espacio separador
+    mov dl,' '
     mov ah,02h
     int 21h
-    loop pn2 
-    pop cx
+
+    ; imprimir nota[i]
+    mov di, offset arrayNotas
+    mov ax, si
+    mov bx,10
+    mul bx
+    add di, ax
+    mov dx, di
+    mov ah,09h
+    int 21h
+
+    inc si
+    loop print_loop
+
+    jmp menu
+
+
+
+;SUBRUTINAS AUXILIARES
+
+    convertirNota proc ;convierte cadena ASCII de nota en numero
+    xor ax, ax 
+    
+    cn_loop:
+    mov bl, [di]
+    cmp bl,'$'
+    je cn_done
+    cmp bl,'0'
+    jb cn_skip
+    cmp bl,'9'
+    ja cn_skip
+
+    ; AX = AX*10 + (bl - '0')
+    mov dx, ax
+    shl dx,1
+    shl dx,1
+    shl dx,1
+    shl ax,1
+    add ax, dx
+    sub bl,'0'
+    xor bh,bh
+    add ax,bx
+    
+    cn_skip:
+    inc di
+    jmp cn_loop
+    
+    cn_done:
     ret
+    
+    convertirNota endp
+
+;intercambia CX bytes entre [SI] y [DI]
+    swap_block proc
+    push ax
+    push bx
+    
+    sw_loop:
+    mov al,[si]
+    mov bl,[di]
+    mov [si],bl
+    mov [di],al
+    inc si
+    inc di
+    loop sw_loop
+    pop bx
+    pop ax
+    ret
+    
+    swap_block endp 
+
+
+    
+    print_num proc
+    push bx
+    push cx
+    push dx
+    push si
+
+    cmp ax, 0
+    jne pn_loop_start
+
+    ; caso 0
+    mov dl, '0'
+    mov ah, 02h
+    int 21h
+    jmp pn_done
+
+    
+    pn_loop_start:
+    xor cx, cx        ;contador de digitos
+
+    pn_div_loop:
+    xor dx, dx        
+    mov bx, 10
+    div bx            ; AX = AX/10, DX = AX%10 (residuo)
+    push dx           ; guardar residuo
+    inc cx
+    cmp ax, 0
+    jne pn_div_loop
+
+    pn_print_loop:
+    pop dx
+    add dl, '0'
+    mov ah, 02h
+    int 21h
+    loop pn_print_loop
+
+    pn_done:
+    pop si
+    pop dx
+    pop cx
+    pop bx
+    ret
+    
+    print_num endp
+
+
      
 
 
@@ -454,44 +666,143 @@ exit:
 
 ;FUNCIONES DE CONDICIONES
 verifyCantidadEst:
-cmp contadorEst,0
-je invalidVacio
-ret
+    cmp contadorEst,0
+    je invalidVacio
+    ret  
+    
+validarNota proc
+    mov ax,0    ;salida por defecto=valido
+    mov bl,0    ;contador de puntos
+    mov bh,0    ;contador decimales
+    mov dl,0    ;flag punto visto
+    
+    mov di,si   ;DI=puntero 
+    mov bp,cx   ;BP=longitud
+    
+val_loop:  
+    cmp bp,0
+    je val_loop_end
+    mov al,[di]
+    
+    cmp al,','  ;coma prohibida
+    je invalido
+    
+    cmp al,'.'  ;punto decimal
+    je val_punto 
+    
+    cmp al,'0'  ;rango de digitos
+    jb invalido
+    
+    cmp dl,0    ;si ya hubo punto, contamos decimales
+    je val_no_decimal
+    inc bh
+    cmp bh,5
+    ja invalido
+    
+val_no_decimal:
+    jmp avanzar
+    
+val_punto:  
+    inc bl
+    cmp bl,1
+    ja invalido
+    mov dl,1
+    jmp avanzar
+    
+avanzar:
+    inc di
+    dec bp
+    jmp val_loop
+    
+val_loop_end:
+    cmp bl,1
+    jne invalido
+    
+    ;verificar parte entera <=100 
+    mov dx,0
+    mov di,si   ;otra vez desde inicio original
+    mov bp,cx
+    
+conv_loop:
+     cmp bp,0
+     je conv_fin
+     mov al,[di]
+     cmp al,'.'
+     je conv_fin
+     sub al,'0'
+     mov ah,0
+     mov bx,10
+     mul bx
+     add dx,ax
+     inc di
+     dec bp
+     jmp conv_loop  
+     
+conv_fin:
+    cmp dx,100
+    ja invalido
+    
+valido:
+    mov ax,0
+    ret
+    
+invalido:
+    mov ax,1
+    ret 
+
+validarNota endp
+
+    
+
+
      
 invalidSort:
-mov dx, offset mensajeInvalid
-mov ah, 09h
-int 21h 
-jmp sort  
+    mov dx, offset mensajeInvalid
+    mov ah, 09h
+    int 21h 
+    jmp sort  
 
 invalidMenu:
-mov dx, offset mensajeInvalid
-mov ah,09h
-int 21h
-jmp menu
+    mov dx, offset mensajeInvalid
+    mov ah,09h
+    int 21h
+    jmp menu 
+    
+invalidFormato:
+    mov dx,offset mensajeInvalidFormato
+    mov ah,09h
+    int 21h
+    call fsalto
+    jmp ingresar
 
 invalidLleno:
-mov dx, offset mensajeInvalidLleno
-mov ah,09h
-int 21h
-call fsalto
-jmp menu
+    mov dx, offset mensajeInvalidLleno
+    mov ah,09h
+    int 21h
+    call fsalto
+    jmp menu
 
 invalidVacio:
-mov dx, offset mensajeInvalidVacio
-mov ah,09h
-int 21h
-call fsalto
-jmp menu
+    mov dx, offset mensajeInvalidVacio
+    mov ah,09h
+    int 21h
+    call fsalto
+    jmp menu  
+
+invalidBuscar: 
+    mov dx,offset mensajeInvalid
+    mov ah,09h
+    int 21h
+    jmp menu
+
 
 
 fsalto:
-mov dx, offset salto
-mov ah,09h
-int 21h
-ret
+    mov dx, offset salto
+    mov ah,09h
+    int 21h
+    ret
 
 
-print_num endp
 codigo ends
-end inicio
+end inicio 
