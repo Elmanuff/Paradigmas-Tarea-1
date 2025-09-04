@@ -152,9 +152,9 @@ espacio_encontrado:
     mov byte ptr [di],'$'
     
     
-    call validarNota
-    cmp ax,0
-    jne invalidFormato
+    ;call validarNota
+    ;cmp ax,0
+    ;jne invalidFormato
      
     ;copiar nota
     inc bx ;primer caracter de la nota
@@ -196,40 +196,61 @@ estadisticas:
 
 ;FUNCION BUSCAR
 buscar:
-    call verifyCantidadEst
-    mov dx,offset preguntaIndice
+    mov dx, offset preguntaIndice
+    mov ah,09h
+    int 21h
+    
+    ; leer un caracter (1-15) solo un digito por ahora
+    mov ah,01h
+    int 21h
+    sub al,'0'          ;convertir ASCII a numero
+    mov bl,al           ;guardar en BL
+    
+    ; validar que sea >=1
+    cmp bl,1
+    jb invalidBuscar
+    ; validar que sea <= contadorEst
+    mov al,contadorEst
+    cmp bl,al
+    ja invalidBuscar
+
+    ; calcular direccion del nombre
+    dec bl              ; porque el índice empieza en 1
+    mov bh,0
+    mov ax,bx           ; AX = indice-1
+    mov dl,31
+    mul dl              ; AX = (indice-1)*31
+    mov si,offset arrayNombres
+    add si,ax           ; SI apunta al nombre
+
+    ; mostrar nombre
+    mov dx,si
     mov ah,09h
     int 21h
     call fsalto
-    
-    mov cl,contadorEst
-    mov ch,0
-    mov si, offset arrayNombres
-    mov di, offset arrayNotas
-    cmp contadorEst,0
-    jg buscarloop
-    
+
+    ; calcular dirección de la nota
+    mov ax,bx
+    mov dl,10
+    mul dl              ; AX = (indice-1)*10
+    mov si,offset arrayNotas
+    add si,ax
+
+    ; mostrar nota
+    mov dx,si
+    mov ah,09h
+    int 21h
+    call fsalto
+
     jmp menu
 
-buscarLoop:    
-    call fsalto
-    
-    ;imprimir nombre
-    mov dx, si
-    mov ah, 09h
+
+invalidBuscar:
+    mov dx, offset mensajeInvalid
+    mov ah,09h
     int 21h
-    
-    ;imprimir nota
-    mov dx, di
-    mov ah, 09h
-    int 21h
-    
-    add si,31
-    add di,10
-    
-    loop buscarloop
-    
     jmp menu
+
  
  
 
@@ -387,7 +408,7 @@ val_loop:
     cmp al,'.'        ; punto decimal
     je val_punto
 
-    cmp al,'0'        ; rango de dígitos
+    cmp al,'0'        ; rango de digitos
     jb invalido
     cmp al,'9'
     ja invalido
