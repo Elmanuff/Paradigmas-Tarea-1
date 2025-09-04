@@ -30,6 +30,7 @@ datos segment
     mensajeInvalid db 0Dh,0Ah,"Por favor ingrese un valor valido$"
     mensajeInvalidLleno db 0Dh,0Ah,"Se ha llegado al limite de estudiantes$"
     mensajeInvalidVacio db 0Dh,0Ah,"No se han ingresado estudiantes$"
+    mensajeInvalidFormato db 0Dh,0Ah,"Entrada invalida. Utilice el formato -Nombre Apellido1 Apellido2 Nota-$"
     
     salto db 0Dh,0Ah, "$"
      
@@ -115,6 +116,9 @@ ingresar:
     ;buscar espacio
     mov cl,[bufferEntrada+1] ;longitud texto
     mov ch,0
+    cmp cl,0
+    je invalidFormato ;si no se introdujo nada
+    
     mov si,offset bufferEntrada+2 ;inicio del texto
     mov bx,si
     add bx,cx ;fin del texto
@@ -126,7 +130,7 @@ buscar_espacio:
     dec bx
     loop buscar_espacio
     
-    jmp invalidLleno;si no hay espacio se devuelve al menu
+    jmp invalidFormato ;no se cumple el formato
 
 espacio_encontrado:
     mov dx,bx
@@ -143,15 +147,15 @@ espacio_encontrado:
 
     ;guardar nombre en array
     mov si,offset bufferEntrada+2
-    ;limitar longitud a 31 caracteres
-    cmp cx,31
-    jbe nombre_ok
-    mov cx,31
-    
-nombre_ok:
+
     rep movsb
     mov byte ptr [di],'$'
-
+    
+    
+    call validarNota
+    cmp ax,0
+    jne invalidFormato
+     
     ;copiar nota
     inc bx ;primer caracter de la nota
     mov si,bx
@@ -163,7 +167,7 @@ nombre_ok:
     sub dx,bx ;longitud nota
     mov cx,dx
 
-    ; calcular destino en arrayNotas
+    ;calcular destino en arrayNotas
     mov al,contadorEst
     xor ah,ah
     mov dl,10 ;cada nota ocupa 10 bytes
@@ -171,12 +175,6 @@ nombre_ok:
     mov di,offset arrayNotas
     add di,ax
 
-    ;limitar longitud nota a 9 caracteres
-    cmp cx,9
-    jbe nota_ok
-    mov cx,9
-    
-nota_ok:
     rep movsb
     mov byte ptr [di],'$'
 
@@ -237,10 +235,12 @@ buscarLoop:
 
 ;FUNCION SORT
 sort: 
-    call verifyCantidadEst 
+    call verifyCantidadEst
+    call fsalto 
     mov dx, offset preguntaSort
     mov ah,09h
-    int 21h 
+    int 21h
+    call fsalto 
     
     mov ah,01h
     int 21h 
@@ -316,7 +316,6 @@ print:
     mov si,0
     
     print_loop:
-    call fsalto
     mov al,array_notas[si]
     call print_num
     inc si
@@ -345,8 +344,9 @@ print:
     int 21h
     loop pn2 
     pop cx
+    call fsalto
     ret
-     
+print_num endp 
 
 
 ;FUNCION EXIT
@@ -366,6 +366,91 @@ verifyCantidadEst:
 cmp contadorEst,0
 je invalidVacio
 ret
+
+validarNota proc
+    mov ax,0          ; salida por defecto = válido
+    mov bl,0          ; contador de puntos
+    mov bh,0          ; contador decimales
+    mov dl,0          ; flag punto visto
+
+    mov di,si         ; DI = puntero que usaremos
+    mov bp,cx         ; BP = longitud que usaremos
+
+val_loop:
+    cmp bp,0
+    je val_loop_end
+    mov al,[di]
+
+    cmp al,','        ; coma prohibida
+    je invalido
+
+    cmp al,'.'        ; punto decimal
+    je val_punto
+
+    cmp al,'0'        ; rango de dígitos
+    jb invalido
+    cmp al,'9'
+    ja invalido
+
+    cmp dl,0          ; si ya hubo punto, contamos decimales
+    je val_no_decimal
+    inc bh
+    cmp bh,5
+    ja invalido
+val_no_decimal:
+
+    jmp avanzar
+
+val_punto:
+    inc bl
+    cmp bl,1
+    ja invalido
+    mov dl,1
+    jmp avanzar
+
+avanzar:
+    inc di
+    dec bp
+    jmp val_loop
+
+val_loop_end:
+    cmp bl,1
+    jne invalido
+
+    ; verificar parte entera <= 100
+    mov dx,0
+    mov di,si     ;otra vez desde inicio original
+    mov bp,cx
+
+conv_loop:
+    cmp bp,0
+    je conv_fin
+    mov al,[di]
+    cmp al,'.'
+    je conv_fin
+    sub al,'0'
+    mov ah,0
+    mov bx,10
+    mul bx
+    add dx,ax
+    inc di
+    dec bp
+    jmp conv_loop
+
+conv_fin:
+    cmp dx,100
+    ja invalido
+
+valido:
+    mov ax,0
+    ret
+
+invalido:
+    mov ax,1
+    ret
+validarNota endp
+
+
      
 invalidSort:
 mov dx, offset mensajeInvalid
@@ -378,6 +463,13 @@ mov dx, offset mensajeInvalid
 mov ah,09h
 int 21h
 jmp menu
+
+invalidFormato:
+mov dx, offset mensajeInvalidFormato
+mov ah,09h
+int 21h
+call fsalto
+jmp ingresar
 
 invalidLleno:
 mov dx, offset mensajeInvalidLleno
@@ -401,6 +493,5 @@ int 21h
 ret
 
 
-print_num endp
 codigo ends
 end inicio
