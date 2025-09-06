@@ -52,7 +52,11 @@ datos segment
     promedio dw 0 
     
     notaMax dw 0
-    notaMin dw 0 
+    notaMin dw 0   
+    
+    array_notas db 15,2,87,12,4,9,21,10,3,1,65,23,44,19,11   
+    
+    mensajeResul db 0Dh,0Ah, "Resultado: $"
     
 
 datos ends
@@ -195,7 +199,11 @@ espacio_encontrado:
     add di,ax
 
     rep movsb
-    mov byte ptr [di],'$'
+    mov byte ptr [di],'$'  
+    
+    
+    
+    
 
     ;incrementar contador de estudiantes
     inc contadorEst
@@ -466,163 +474,169 @@ indice_listo:
     jmp menu
 
 
-
 ;FUNCION SORT
-sort: 
+sort:    
+
     call verifyCantidadEst
-    call fsalto 
-    mov dx, offset preguntaSort
+    
+   ;Convertir notas ASCII a enteros
+    call convertirNotasANum
+
+    ;Imprimir array de enteros para verificar
+    call fsalto
+    mov dx, offset mensajeResul   ; mensaje de verificacion
     mov ah,09h
     int 21h
-    call fsalto 
-    
-    mov ah,01h
-    int 21h 
-    
-    cmp al,'1'
-    je asc
-    
-    cmp al,'2'
-    je desc  
-    
-    jmp invalidSort
+    call fsalto
 
-;ORDEN ASCENDENTE
+    mov cl, [contadorEst]  
+    mov ch,0       ; numero de estudiantes
+    cmp cx,0
+    je invalidVacio  
+    
+    
+    ;Para validar si esta funcionando bien
+    mov si, offset arrayNotas_num  ; puntero al inicio del array de enteros
+imprimir_enteros:
+    mov ax, [si]                   ; tomar la nota como entero
+    call print_num
+    call fsalto
+    add si, 2                       ; pasar al siguiente entero
+    loop imprimir_enteros
+
+
+mov dx, offset preguntaSort
+mov ah,09h
+int 21h 
+call fsalto
+
+mov ah,01h
+int 21h 
+
+cmp al,'1'
+je asc
+
+cmp al,'2'
+je desc
+
+
 asc:
-    mov cl, [contadorEst]
-    dec cl                 
-    jz print_sort         
-    mov ch,0
-    mov bx,cx             
+mov cx,14 ;cantidad de comparaciones
+mov si,0
+mov di,0
 
-outer_loop_asc:
-    mov si,0               
-inner_loop_asc:
-    push bx
-    push cx
-    push si
-    
-    mov di, offset arrayNotas
-    mov bl, [contadorEst]
-    xor bh,bh
-    
-    mov ax, si
-    mov bx,10
-    mul bx
-    add di, ax
-    call leerNota     
+ciclo1asc:
+push cx
+lea si, array_notas ;pasa la direccion efectiva
+mov di,si 
 
-    mov dx, ax              
-    
-    pop si
-    inc si
-    push si
+ciclo2asc:
+inc di;incrementa posicion
+mov al,[si]  
+cmp al, [di]
+ja switch ;short jump
+jb menor
 
-    mov di, offset arrayNotas
-    mov ax, si
-    mov bx,10
-    mul bx
-    add di, ax
-    call leerNota      
-    
-    cmp dx, ax
-    jbe no_swap_asc
-    
-    pop si
-    dec si
-    push si
-  
-    mov di, offset arrayNombres
-    mov ax, si
-    mov bx,31
-    mul bx
-    add di, ax
-    mov si, di
-   
-    mov di, offset arrayNombres
-    mov ax, si
-    inc ax
-    mov bx,31
-    mul bx
-    add di, ax
+switch: 
+mov ah,[di]
+mov [di],al
+mov [si],ah
 
-    mov cx,31
-    call swap_block
-   
-    pop si
-    dec si
-    push si
 
-    mov di, offset arrayNotas
-    mov ax, si
-    mov bx,10
-    mul bx
-    add di, ax
-    mov si, di
+menor:   
+inc si
+loop ciclo2asc  
+pop cx
+loop ciclo1asc 
+jmp print
 
-    mov di, offset arrayNotas
-    mov ax, si
-    inc ax
-    mov bx,10
-    mul bx
-    add di, ax
 
-    mov cx,10
-    call swap_block
+              
+desc:
+mov cx,14
+mov si,0
+mov di,0 
 
-no_swap_asc:
-    pop si
-    dec si
-    pop cx
-    pop bx
-    loop inner_loop_asc
-    dec bx
-    jnz outer_loop_asc
-    jmp print_sort
+ciclo1desc:
+push cx
+lea si, array_notas
+mov di,si
 
-;ORDEN DESCENDENTE
-desc:  
-    jmp print_sort
+ciclo2desc:
+inc di
+mov al,[si]
+cmp al, [di]
+jb switchD
+ja mayor
 
-print_sort:
-    mov cl, [contadorEst]
-    mov ch,0
+switchD:
+mov ah,[di]
+mov [di],al
+mov [si],ah
+
+mayor:
+inc si
+loop ciclo2desc
+pop cx
+loop ciclo1desc  
+jmp print 
+           
+           
+print:
+    mov dx, offset mensajeResul  
+    mov ah,09h
+    int 21h 
+    call fsalto
+
+    mov cx,15
     mov si,0
 
 print_loop:
+    xor ax, ax              ; limpiar AX
+    mov al, array_notas[si] ; pasar la nota como número
+    call print_num
     call fsalto
-
-    ; imprimir nombre[i]
-    mov di, offset arrayNombres
-    mov ax, si
-    mov bx,31
-    mul bx
-    add di, ax
-    mov dx, di
-    mov ah,09h
-    int 21h
-
-    ; espacio separador
-    mov dl,' '
-    mov ah,02h
-    int 21h
-
-    ; imprimir nota[i]
-    mov di, offset arrayNotas
-    mov ax, si
-    mov bx,10
-    mul bx
-    add di, ax
-    mov dx, di
-    mov ah,09h
-    int 21h
-
     inc si
     loop print_loop
-
     jmp menu
 
+
+;salir
+mov ah,4Ch
+int 21h
+
+
+
+
+
+
+   
+
 ;SUBRUTINAS AUXILIARES
+
+convertirNotasANum proc
+    mov si, offset arrayNotas       ; inicio de notas ASCII
+    mov di, offset arrayNotas_num   ; inicio de notas enteros
+    mov cl, [contadorEst]           ; cargar contador de estudiantes (byte)
+    mov ch, 0                       ; limpiar parte alta de CX
+    
+conv_loop:
+    push cx                     ; guardar contador
+    mov bx, 0                   ; limpiar BX (no usado)
+    call leerNota               ; convierte la nota en AX usando SI
+    
+    mov [di], ax                ; guardar el valor numérico en arrayNotas_num
+    add si, 10                  ; pasar al siguiente bloque de 10 bytes en arrayNotas
+    add di, 2                   ; pasar al siguiente entero (2 bytes)
+    
+    pop cx
+    dec cx
+    jnz conv_loop
+
+    ret
+convertirNotasANum endp
+
+
 leerNota proc
     xor ax, ax        ; acumulador de la nota
     mov cx, 10        ; longitud máxima de la nota (10 bytes)
@@ -659,24 +673,7 @@ leerNota endp
 
         
 
-;intercambia CX bytes entre [SI] y [DI]
-swap_block proc
-    push ax
-    push bx
-    
-sw_loop:
-    mov al,[si]
-    mov bl,[di]
-    mov [si],bl
-    mov [di],al
-    inc si
-    inc di
-    loop sw_loop
-    pop bx
-    pop ax
-    ret
-    
-swap_block endp 
+
     
     
 print_num proc
@@ -796,9 +793,94 @@ val_loop_end:
     mov di,si     ;otra vez desde inicio original
     mov bp,cx
 
-conv_loop:
+conv_loopV:
     cmp bp,0
-    je conv_fin
+    je conv_finV
+    mov al,[di]
+    cmp al,'.'
+    je conv_finV
+    sub al,'0'
+    mov ah,0
+    mov bx,10
+    mul bx
+    add dx,ax
+    inc di
+    dec bp
+    jmp conv_loopV
+
+conv_finV:
+    cmp dx,100
+    ja invalido
+
+valido:
+    mov ax,0
+    ret
+
+invalido:
+    mov ax,1
+    ret
+validarNota endp
+
+
+     
+invalidSort:
+    mov dx, offset mensajeInvalid
+    mov ah, 09h
+    int 21h 
+    jmp sort  
+
+invalidMenu:
+    mov dx, offset mensajeInvalid
+    mov ah,09h
+    int 21h
+    jmp menu
+
+invalidIndice:
+    mov dx, offset mensajeInvalidIndice
+    mov ah,09h
+    int 21h
+    call fsalto
+    jmp buscar
+
+invalidFormato:
+    mov dx, offset mensajeInvalidFormato
+    mov ah,09h
+    int 21h
+    call fsalto
+    jmp ingresar
+
+invalidLleno:
+    mov dx, offset mensajeInvalidLleno
+    mov ah,09h
+    int 21h
+    call fsalto
+    jmp menu
+
+invalidVacio:
+    mov dx, offset mensajeInvalidVacio
+    mov ah,09h
+    int 21h
+    call fsalto
+    jmp menu
+
+
+fespacio:
+    mov dx, offset espacio
+    mov ah,09h
+    int 21h
+    ret
+
+fsalto:
+    mov dx, offset salto
+    mov ah,09h
+    int 21h
+    ret
+
+
+codigo ends
+end inicio
+
+je conv_fin
     mov al,[di]
     cmp al,'.'
     je conv_fin
