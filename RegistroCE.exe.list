@@ -1,0 +1,1140 @@
+EMU8086 GENERATED LISTING. MACHINE CODE <- SOURCE.
+ 
+RegistroCE.exe -- emu8086 assembler version: 4.08  
+ 
+[ 9/6/2025  --  11:53:44 AM ] 
+ 
+===================================================================================================
+[LINE]     LOC: MACHINE CODE                          SOURCE
+===================================================================================================
+ 
+[   1]        :                                       title RegistroCE
+[   2]        :                                       
+[   3]        :                                       datos segment
+[   4]        :                                       ;Variables aqui------------------------------------------------
+[   5]        :                                       
+[   6]        :                                       
+[   7]    0000: 42 69 65 6E 76 65 6E 69 64 6F 20 61   mensajeBienvenida db "Bienvenido a RegistroCE",0Dh,0Ah
+                20 52 65 67 69 73 74 72 6F 43 45 0D 
+                0A                                  
+[   8]    0019: 44 69 67 69 74 65 3A 24               db "Digite:$"
+[   9]    0021: 31 2E 20 20 49 6E 67 72 65 73 61 72   mensajeMenu db "1.  Ingresar calificaciones (15 estudiantes -Nombre Apellido1 Apellido2 Nota-)",0Dh,0Ah
+                20 63 61 6C 69 66 69 63 61 63 69 6F 
+                6E 65 73 20 28 31 35 20 65 73 74 75 
+                64 69 61 6E 74 65 73 20 2D 4E 6F 6D 
+                62 72 65 20 41 70 65 6C 6C 69 64 6F 
+                31 20 41 70 65 6C 6C 69 64 6F 32 20 
+                4E 6F 74 61 2D 29 0D 0A             
+[  10]    0071: 32 2E 20 20 4D 6F 73 74 72 61 72 20   db "2.  Mostrar estadisticas",0Dh,0Ah
+                65 73 74 61 64 69 73 74 69 63 61 73 
+                0D 0A                               
+[  11]    008B: 33 2E 20 20 42 75 73 63 61 72 20 65   db "3.  Buscar estudiante por posicion (indice)",0Dh,0Ah
+                73 74 75 64 69 61 6E 74 65 20 70 6F 
+                72 20 70 6F 73 69 63 69 6F 6E 20 28 
+                69 6E 64 69 63 65 29 0D 0A          
+[  12]    00B8: 34 2E 20 20 4F 72 64 65 6E 61 72 20   db "4.  Ordenar calificaciones (ascendente/descendente)",0Dh,0Ah
+                63 61 6C 69 66 69 63 61 63 69 6F 6E 
+                65 73 20 28 61 73 63 65 6E 64 65 6E 
+                74 65 2F 64 65 73 63 65 6E 64 65 6E 
+                74 65 29 0D 0A                      
+[  13]    00ED: 35 2E 20 20 53 61 6C 69 72 24         db "5.  Salir$"
+[  14]    00F7: 0D 0A 50 6F 72 20 66 61 76 6F 72 20   mensajeNombre db 0Dh,0Ah, "Por favor ingrese su estudiante o digite 9 para salir al menu principal:$"
+                69 6E 67 72 65 73 65 20 73 75 20 65 
+                73 74 75 64 69 61 6E 74 65 20 6F 20 
+                64 69 67 69 74 65 20 39 20 70 61 72 
+                61 20 73 61 6C 69 72 20 61 6C 20 6D 
+                65 6E 75 20 70 72 69 6E 63 69 70 61 
+                6C 3A 24                            
+[  15]    0142: 0D 0A 47 72 61 63 69 61 73 20 70 6F   mensajeSalida db 0Dh,0Ah, "Gracias por usar Registro CE$"
+                72 20 75 73 61 72 20 52 65 67 69 73 
+                74 72 6F 20 43 45 24                
+[  16]    0161: 41 70 72 6F 62 61 64 6F 73 20 43 61   mensajeAprobados db "Aprobados Cantidad: $",0Dh,0Ah
+                6E 74 69 64 61 64 3A 20 24 0D 0A    
+[  17]    0178: 52 65 70 72 6F 62 61 64 6F 73 20 43   mensajeReprobados db "Reprobados Cantidad: $",0Dh,0Ah
+                61 6E 74 69 64 61 64 3A 20 24 0D 0A 
+                                                    
+[  18]    0190: 20 50 6F 72 63 65 6E 74 61 6A 65 3A   mensajePorcentaje db " Porcentaje: $",0Dh,0Ah
+                20 24 0D 0A                         
+[  19]    01A0: 50 72 6F 6D 65 64 69 6F 3A 20 24 0D   mensajePromedio db "Promedio: $",0Dh,0Ah
+                0A                                  
+[  20]    01AD: 64                                    cien db 100
+[  21]    01AE: 4E 6F 74 61 20 6D 61 78 69 6D 61 3A   mensajeMaxima db "Nota maxima: $",0Dh,0Ah
+                20 24 0D 0A                         
+[  22]    01BE: 4E 6F 74 61 20 6D 69 6E 69 6D 61 3A   mensajeMinima db "Nota minima: $",0Dh,0Ah
+                20 24 0D 0A                         
+[  23]        :                                       
+[  24]        :                                       
+[  25]    01CE: 27 00 24 24 24 24 24 24 24 24 24 24   bufferEntrada db 39,0,39 dup('$') ;max 39 caracteres
+                24 24 24 24 24 24 24 24 24 24 24 24 
+                24 24 24 24 24 24 24 24 24 24 24 24 
+                24 24 24 24 24                      
+[  26]        :                                       
+[  27]    01F7: 30 30 30 30 30 30 30 30 30 30 30 30   arrayNombres db 465 dup('0') ;array de 15 espacios para nombres de 31 bytes. 15*31=465
+                30 30 30 30 30 30 30 30 30 30 30 30 
+                30 30 30 30 30 30 30 30 30 30 30 30 
+                30 30 30 30 30 30 30 30 30 30 30 30 
+                30 30 30 30 30 30 30 30 30 30 30 30 
+                30 30 30 30 30 30 30 30 30 30 30 30 
+                30 30 30 30 30 30 30 30 30 30 30 30 
+                30 30 30 30 30 30 30 30 30 30 30 30 
+                30 30 30 30 30 30 30 30 30 30 30 30 
+                30 30 30 30 30 30 30 30 30 30 30 30 
+                30 30 30 30 30 30 30 30 30 30 30 30 
+                30 30 30 30 30 30 30 30 30 30 30 30 
+                30 30 30 30 30 30 30 30 30 30 30 30 
+                30 30 30 30 30 30 30 30 30 30 30 30 
+                30 30 30 30 30 30 30 30 30 30 30 30 
+                30 30 30 30 30 30 30 30 30 30 30 30 
+                30 30 30 30 30 30 30 30 30 30 30 30 
+                30 30 30 30 30 30 30 30 30 30 30 30 
+                30 30 30 30 30 30 30 30 30 30 30 30 
+                30 30 30 30 30 30 30 30 30 30 30 30 
+                30 30 30 30 30 30 30 30 30 30 30 30 
+                30 30 30 30 30 30 30 30 30 30 30 30 
+                30 30 30 30 30 30 30 30 30 30 30 30 
+                30 30 30 30 30 30 30 30 30 30 30 30 
+                30 30 30 30 30 30 30 30 30 30 30 30 
+                30 30 30 30 30 30 30 30 30 30 30 30 
+                30 30 30 30 30 30 30 30 30 30 30 30 
+                30 30 30 30 30 30 30 30 30 30 30 30 
+                30 30 30 30 30 30 30 30 30 30 30 30 
+                30 30 30 30 30 30 30 30 30 30 30 30 
+                30 30 30 30 30 30 30 30 30 30 30 30 
+                30 30 30 30 30 30 30 30 30 30 30 30 
+                30 30 30 30 30 30 30 30 30 30 30 30 
+                30 30 30 30 30 30 30 30 30 30 30 30 
+                30 30 30 30 30 30 30 30 30 30 30 30 
+                30 30 30 30 30 30 30 30 30 30 30 30 
+                30 30 30 30 30 30 30 30 30 30 30 30 
+                30 30 30 30 30 30 30 30 30 30 30 30 
+                30 30 30 30 30 30 30 30 30          
+[  28]    03C8: 00 00 00 00 00 00 00 00 00 00 00 00   arrayNotas db 150 dup(0) ;array de 15 espacios para notas de 10 bytes. 15*10=150
+                00 00 00 00 00 00 00 00 00 00 00 00 
+                00 00 00 00 00 00 00 00 00 00 00 00 
+                00 00 00 00 00 00 00 00 00 00 00 00 
+                00 00 00 00 00 00 00 00 00 00 00 00 
+                00 00 00 00 00 00 00 00 00 00 00 00 
+                00 00 00 00 00 00 00 00 00 00 00 00 
+                00 00 00 00 00 00 00 00 00 00 00 00 
+                00 00 00 00 00 00 00 00 00 00 00 00 
+                00 00 00 00 00 00 00 00 00 00 00 00 
+                00 00 00 00 00 00 00 00 00 00 00 00 
+                00 00 00 00 00 00 00 00 00 00 00 00 
+                00 00 00 00 00 00                   
+[  29]        :                                       
+[  30]    045E: 00                                    contadorEst db 0
+[  31]        :                                       
+[  32]    045F: 43 6F 6D 6F 20 64 65 73 65 61 20 6F   preguntaSort db "Como desea ordenar las calificaciones:",0Dh,0Ah
+                72 64 65 6E 61 72 20 6C 61 73 20 63 
+                61 6C 69 66 69 63 61 63 69 6F 6E 65 
+                73 3A 0D 0A                         
+[  33]    0487: 31 2E 20 20 41 73 63 0D 0A            db "1.  Asc",0Dh,0Ah
+[  34]    0490: 32 2E 20 20 44 65 73 24               db "2.  Des$"
+[  35]    0498: 0D 0A 51 75 65 20 65 73 74 75 64 69   preguntaIndice db 0Dh,0Ah,"Que estudiante desea mostrar:$"
+                61 6E 74 65 20 64 65 73 65 61 20 6D 
+                6F 73 74 72 61 72 3A 24             
+[  36]        :                                       
+[  37]    04B8: 0D 0A 50 6F 72 20 66 61 76 6F 72 20   mensajeInvalid db 0Dh,0Ah,"Por favor ingrese un valor valido$"
+                69 6E 67 72 65 73 65 20 75 6E 20 76 
+                61 6C 6F 72 20 76 61 6C 69 64 6F 24 
+                                                    
+[  38]    04DC: 0D 0A 49 6E 64 69 63 65 20 69 6E 76   mensajeInvalidIndice db 0Dh,0Ah,"Indice invalido, vacio o fuera de rango$"
+                61 6C 69 64 6F 2C 20 76 61 63 69 6F 
+                20 6F 20 66 75 65 72 61 20 64 65 20 
+                72 61 6E 67 6F 24                   
+[  39]    0506: 0D 0A 53 65 20 68 61 20 6C 6C 65 67   mensajeInvalidLleno db 0Dh,0Ah,"Se ha llegado al limite de estudiantes$"
+                61 64 6F 20 61 6C 20 6C 69 6D 69 74 
+                65 20 64 65 20 65 73 74 75 64 69 61 
+                6E 74 65 73 24                      
+[  40]    052F: 0D 0A 4E 6F 20 73 65 20 68 61 6E 20   mensajeInvalidVacio db 0Dh,0Ah,"No se han ingresado estudiantes$"
+                69 6E 67 72 65 73 61 64 6F 20 65 73 
+                74 75 64 69 61 6E 74 65 73 24       
+[  41]    0551: 0D 0A 45 6E 74 72 61 64 61 20 69 6E   mensajeInvalidFormato db 0Dh,0Ah,"Entrada invalida. Utilice el formato -Nombre Apellido1 Apellido2 Nota-$"
+                76 61 6C 69 64 61 2E 20 55 74 69 6C 
+                69 63 65 20 65 6C 20 66 6F 72 6D 61 
+                74 6F 20 2D 4E 6F 6D 62 72 65 20 41 
+                70 65 6C 6C 69 64 6F 31 20 41 70 65 
+                6C 6C 69 64 6F 32 20 4E 6F 74 61 2D 
+                24                                  
+[  42]        :                                       
+[  43]    059A: 0D 0A 24                              salto db 0Dh,0Ah, "$"
+[  44]    059D: 20 20 20 20 20 20 20 24               espacio db "       $"
+[  45]        :                                       
+[  46]    05A5: 00 00                                 aprobados dw 0
+[  47]    05A7: 00 00                                 reprobados dw 0
+[  48]        :                                       
+[  49]    05A9: 00 00 00 00 00 00 00 00 00 00 00 00   arrayNotas_num dw 15 dup(0)
+                00 00 00 00 00 00 00 00 00 00 00 00 
+                00 00 00 00 00 00                   
+[  50]    05C7: 00 00                                 sumaNotas dw 0
+[  51]        :                                       
+[  52]    05C9: 00 00                                 promedio dw 0
+[  53]        :                                       
+[  54]    05CB: 00 00                                 notaMax dw 0
+[  55]    05CD: 00 00                                 notaMin dw 0
+[  56]        :                                       
+[  57]    05CF: 0F 02 57 0C 04 09 15 0A 03 01 41 17   array_notas db 15,2,87,12,4,9,21,10,3,1,65,23,44,19,11
+                2C 13 0B                            
+[  58]        :                                       
+[  59]    05DE: 0D 0A 52 65 73 75 6C 74 61 64 6F 3A   mensajeResul db 0Dh,0Ah, "Resultado: $"
+                20 24                               
+[  60]        :                                       
+[  61]        :                                       
+[  62]        :                                       datos ends
+[  63]        :                                       ;-----------------------------------------------------------------------
+[  64]        :                                       
+[  65]        :                                       pila segment
+[  66]    05F0: 00 00 00 00 00 00 00 00 00 00 00 00   db 64 dup(0)
+                00 00 00 00 00 00 00 00 00 00 00 00 
+                00 00 00 00 00 00 00 00 00 00 00 00 
+                00 00 00 00 00 00 00 00 00 00 00 00 
+                00 00 00 00 00 00 00 00 00 00 00 00 
+                00 00 00 00                         
+[  67]        :                                       pila ends
+[  68]        :                                       
+[  69]        :                                       codigo segment
+[  70]        :                                       
+[  71]    0630:                                       inicio proc far
+[  72]        :                                       
+[  73]        :                                       assume ds:datos, cs:codigo, ss:pila
+[  74]        :                                       
+[  75]    0630: 1E                                    push ds
+[  76]    0631: B8 00 00                              mov ax,0
+[  77]    0634: 50                                    push ax
+[  78]        :                                       
+[  79]    0635: B8 00 00                              mov ax,datos
+[  80]    0638: 8E D8                                 mov ds,ax
+[  81]    063A: 8E C0                                 mov es,ax
+[  82]        :                                       
+[  83]        :                                       ;Aqui comienza el codigo del programa
+[  84]        :                                       
+[  85]    063C: BA 00 00                              mov dx, offset mensajeBienvenida
+[  86]    063F: B4 09                                 mov ah,09h
+[  87]    0641: CD 21                                 int 21h
+[  88]    0643: E8 B2 04                              call fsalto
+[  89]        :                                       
+[  90]        :                                       
+[  91]        :                                       
+[  92]        :                                       ;FUNCION MENU
+[  93]    0646:                                       menu:
+[  94]    0646: E8 AF 04                              call fsalto
+[  95]    0649: BA 21 00                              mov dx, offset mensajeMenu
+[  96]    064C: B4 09                                 mov ah,09h
+[  97]    064E: CD 21                                 int 21h
+[  98]    0650: E8 A5 04                              call fsalto
+[  99]        :                                       
+[ 100]        :                                       ;leer opcion
+[ 101]    0653: B4 01                                 mov ah,01h
+[ 102]    0655: CD 21                                 int 21h
+[ 103]        :                                       
+[ 104]    0657: 3C 31                                 cmp al,'1'
+[ 105]    0659: 74 1F                                 je ingresar
+[ 106]        :                                       
+[ 107]    065B: 3C 32                                 cmp al,'2'
+[ 108]    065D: 75 03 E9 A3 00                        je estadisticas
+[ 109]        :                                       
+[ 110]    0662: 3C 33                                 cmp al,'3'
+[ 111]    0664: 75 03 E9 CD 01                        je buscar
+[ 112]        :                                       
+[ 113]    0669: 3C 34                                 cmp al,'4'
+[ 114]    066B: 75 03 E9 75 02                        je sort
+[ 115]        :                                       
+[ 116]    0670: 3C 35                                 cmp al,'5'
+[ 117]    0672: 75 03 E9 A5 03                        je exit
+[ 118]        :                                       
+[ 119]    0677: E9 38 04                              jmp invalidMenu
+[ 120]        :                                       
+[ 121]        :                                       
+[ 122]        :                                       
+[ 123]        :                                       ;FUNCION INGRESAR
+[ 124]    067A:                                       ingresar:
+[ 125]    067A: BA F7 00                              mov dx,offset mensajeNombre
+[ 126]    067D: B4 09                                 mov ah,09h
+[ 127]    067F: CD 21                                 int 21h
+[ 128]    0681: E8 74 04                              call fsalto
+[ 129]        :                                       
+[ 130]    0684: BA CE 01                              mov dx,offset bufferEntrada
+[ 131]    0687: B4 0A                                 mov ah,0Ah
+[ 132]    0689: CD 21                                 int 21h
+[ 133]        :                                       
+[ 134]        :                                       ;salir si se escribe '9'
+[ 135]    068B: A0 D0 01                              mov al,[bufferEntrada+2]
+[ 136]    068E: 3C 39                                 cmp al,'9'
+[ 137]    0690: 74 B4                                 je menu
+[ 138]        :                                       
+[ 139]        :                                       ;buscar espacio
+[ 140]    0692: 8A 0E CF 01                           mov cl,[bufferEntrada+1] ;longitud texto
+[ 141]    0696: B5 00                                 mov ch,0
+[ 142]    0698: 80 F9 00                              cmp cl,0
+[ 143]    069B: 75 03 E9 29 04                        je invalidFormato ;si no se introdujo nada
+[ 144]        :                                       
+[ 145]    06A0: BE D0 01                              mov si,offset bufferEntrada+2 ;inicio del texto
+[ 146]    06A3: 8B DE                                 mov bx,si
+[ 147]    06A5: 03 D9                                 add bx,cx ;fin del texto
+[ 148]    06A7: 4B                                    dec bx
+[ 149]        :                                       
+[ 150]    06A8:                                       buscar_espacio:
+[ 151]    06A8: 80 3F 20                              cmp byte ptr [bx],' '
+[ 152]    06AB: 74 06                                 je espacio_encontrado
+[ 153]    06AD: 4B                                    dec bx
+[ 154]    06AE: E2 F8                                 loop buscar_espacio
+[ 155]        :                                       
+[ 156]    06B0: E9 16 04                              jmp invalidFormato ;no se cumple el formato
+[ 157]        :                                       
+[ 158]    06B3:                                       espacio_encontrado:
+[ 159]    06B3: 8B D3                                 mov dx,bx
+[ 160]    06B5: 2B D6                                 sub dx,si ;con esta resta se obtiene la longitud nombre
+[ 161]    06B7: 8B CA                                 mov cx,dx
+[ 162]        :                                       
+[ 163]        :                                       ;calcular donde debe ir en el array
+[ 164]    06B9: A0 5E 04                              mov al,contadorEst
+[ 165]    06BC: 32 E4                                 xor ah,ah
+[ 166]    06BE: B2 1F                                 mov dl,31 ;cada nombre ocupa 31 bytes
+[ 167]    06C0: F6 E2                                 mul dl
+[ 168]    06C2: BF F7 01                              mov di,offset arrayNombres
+[ 169]    06C5: 03 F8                                 add di,ax
+[ 170]        :                                       
+[ 171]        :                                       ;guardar nombre en array
+[ 172]    06C7: BE D0 01                              mov si,offset bufferEntrada+2
+[ 173]        :                                       
+[ 174]    06CA: F3 A4                                 rep movsb
+[ 175]    06CC: C6 05 24                              mov byte ptr [di],'$'
+[ 176]        :                                       
+[ 177]        :                                       
+[ 178]        :                                       ;call validarNota
+[ 179]        :                                       ;cmp ax,0
+[ 180]        :                                       ;jne invalidFormato
+[ 181]        :                                       
+[ 182]        :                                       ;copiar nota
+[ 183]    06CF: 43                                    inc bx ;primer caracter de la nota
+[ 184]    06D0: 8B F3                                 mov si,bx
+[ 185]        :                                       
+[ 186]    06D2: 8A 0E CF 01                           mov cl,[bufferEntrada+1] ;longitud total
+[ 187]    06D6: B5 00                                 mov ch,0
+[ 188]    06D8: BA D0 01                              mov dx,offset bufferEntrada+2
+[ 189]    06DB: 03 D1                                 add dx,cx ;fin del texto
+[ 190]    06DD: 2B D3                                 sub dx,bx ;longitud nota
+[ 191]    06DF: 8B CA                                 mov cx,dx
+[ 192]        :                                       
+[ 193]        :                                       ;calcular destino en arrayNotas
+[ 194]    06E1: A0 5E 04                              mov al,contadorEst
+[ 195]    06E4: 32 E4                                 xor ah,ah
+[ 196]    06E6: B2 0A                                 mov dl,10 ;cada nota ocupa 10 bytes
+[ 197]    06E8: F6 E2                                 mul dl
+[ 198]    06EA: BF C8 03                              mov di,offset arrayNotas
+[ 199]    06ED: 03 F8                                 add di,ax
+[ 200]        :                                       
+[ 201]    06EF: F3 A4                                 rep movsb
+[ 202]    06F1: C6 05 24                              mov byte ptr [di],'$'
+[ 203]        :                                       
+[ 204]        :                                       
+[ 205]        :                                       
+[ 206]        :                                       
+[ 207]        :                                       
+[ 208]        :                                       ;incrementar contador de estudiantes
+[ 209]    06F4: FE 06 5E 04                           inc contadorEst
+[ 210]    06F8: 80 3E 5E 04 0F                        cmp contadorEst,15 ;si son menos de 15 estudiantes
+[ 211]    06FD: 73 03 E9 78 FF                        jb ingresar ;continuar ingresando
+[ 212]        :                                       
+[ 213]    0702: E9 D1 03                              jmp invalidLleno
+[ 214]        :                                       
+[ 215]        :                                       
+[ 216]        :                                       
+[ 217]        :                                       ;FUNCION ESTADISTICAS
+[ 218]    0705:                                       estadisticas:
+[ 219]    0705: E8 F0 03                              call fsalto
+[ 220]    0708: E8 1E 03                              call verifyCantidadEst
+[ 221]        :                                       
+[ 222]        :                                       ;Inicializar contadores en memoria
+[ 223]    070B: C7 06 A5 05 00 00                     mov word ptr [aprobados], 0
+[ 224]    0711: C7 06 A7 05 00 00                     mov word ptr [reprobados], 0
+[ 225]    0717: C7 06 C7 05 00 00                     mov word ptr [sumaNotas],0
+[ 226]    071D: C7 06 CB 05 00 00                     mov word ptr [notaMax],0
+[ 227]    0723: C7 06 CD 05 65 00                     mov word ptr [notaMin],101
+[ 228]        :                                       
+[ 229]        :                                       
+[ 230]        :                                       ;Puntero al primer bloque de notas (ascii)
+[ 231]    0729: BE C8 03                              mov si, offset arrayNotas
+[ 232]        :                                       
+[ 233]    072C: A0 5E 04                              mov al, [contadorEst]
+[ 234]    072F: 32 E4                                 xor ah, ah
+[ 235]    0731: 8B E8                                 mov bp, ax   ;bp= numero de estudiantes
+[ 236]        :                                       
+[ 237]    0733:                                       contar_loop:
+[ 238]    0733: 33 C0                                 xor ax, ax  ;Acumulador de la nota actual
+[ 239]    0735: 8B FE                                 mov di, si  ;Apunta al inicio de la nota actual
+[ 240]    0737: B9 09 00                              mov cx, 9  ;max caracteres
+[ 241]    073A: E8 81 02                              call leerNota
+[ 242]        :                                       
+[ 243]        :                                       
+[ 244]        :                                       ;acumular suma
+[ 245]    073D: 8B 1E C7 05                           mov bx,[sumaNotas]
+[ 246]    0741: 03 D8                                 add bx,ax
+[ 247]    0743: 89 1E C7 05                           mov [sumaNotas],bx
+[ 248]        :                                       
+[ 249]        :                                       ;actualizar nota maxima
+[ 250]    0747: 8B 1E CB 05                           mov bx,[notaMax]
+[ 251]    074B: 3B C3                                 cmp ax,bx
+[ 252]    074D: 7E 03                                 jle noActualizar_max
+[ 253]    074F: A3 CB 05                              mov [notaMax],ax
+[ 254]        :                                       
+[ 255]    0752:                                       noActualizar_max:
+[ 256]        :                                       ;actualiza nota minima
+[ 257]    0752: 8B 1E CD 05                           mov bx,[notaMin]
+[ 258]    0756: 3B C3                                 cmp ax,bx
+[ 259]    0758: 7D 03                                 jge noActualizar_min
+[ 260]    075A: A3 CD 05                              mov [notaMin],ax
+[ 261]        :                                       
+[ 262]    075D:                                       noActualizar_min:
+[ 263]        :                                       
+[ 264]    075D: 3D 46 00                              cmp ax, 70
+[ 265]    0760: 7C 0B                                 jl marcar_reprobado
+[ 266]        :                                       
+[ 267]    0762: 8B 1E A5 05                           mov bx, [aprobados]
+[ 268]    0766: 43                                    inc bx
+[ 269]    0767: 89 1E A5 05                           mov [aprobados], bx
+[ 270]    076B: EB 09                                 jmp siguiente_est
+[ 271]        :                                       
+[ 272]    076D:                                       marcar_reprobado:
+[ 273]    076D: 8B 1E A7 05                           mov bx, [reprobados]
+[ 274]    0771: 43                                    inc bx
+[ 275]    0772: 89 1E A7 05                           mov [reprobados], bx
+[ 276]        :                                       
+[ 277]    0776:                                       siguiente_est:
+[ 278]    0776: 83 C6 0A                              add si, 10      ;pasar al siguiente bloque de 10 bytes
+[ 279]    0779: 4D                                    dec bp
+[ 280]    077A: 75 B7                                 jnz contar_loop
+[ 281]        :                                       
+[ 282]        :                                       
+[ 283]        :                                       
+[ 284]        :                                       ;calcular promedio
+[ 285]    077C: A1 C7 05                              mov ax,[sumaNotas]
+[ 286]        :                                       
+[ 287]    077F: A0 5E 04                              mov al,[contadorEst]
+[ 288]    0782: 32 E4                                 xor ah,ah
+[ 289]        :                                       
+[ 290]    0784: A1 C7 05                              mov ax,[sumaNotas]
+[ 291]    0787: 33 D2                                 xor dx,dx
+[ 292]        :                                       
+[ 293]    0789: 8A 1E 5E 04                           mov bl,[contadorEst]
+[ 294]    078D: 80 FB 00                              cmp bl,0
+[ 295]    0790: 75 03 E9 4E 03                        je invalidVacio
+[ 296]    0795: B7 00                                 mov bh,0
+[ 297]        :                                       
+[ 298]    0797: F7 F3                                 div bx
+[ 299]        :                                       
+[ 300]    0799: A3 C9 05                              mov [promedio],ax
+[ 301]        :                                       
+[ 302]        :                                       
+[ 303]        :                                       ;mostrar promedio
+[ 304]    079C: E8 59 03                              call fsalto
+[ 305]    079F: BA A0 01                              mov dx,offset mensajePromedio
+[ 306]    07A2: B4 09                                 mov ah,09h
+[ 307]    07A4: CD 21                                 int 21h
+[ 308]        :                                       
+[ 309]    07A6: A1 C9 05                              mov ax,[promedio]
+[ 310]        :                                       
+[ 311]    07A9: E8 40 02                              call print_num
+[ 312]        :                                       
+[ 313]        :                                       
+[ 314]        :                                       ;mostrar nota maxima
+[ 315]    07AC: E8 49 03                              call fsalto
+[ 316]    07AF: BA AE 01                              mov dx,offset mensajeMaxima
+[ 317]    07B2: B4 09                                 mov ah,09h
+[ 318]    07B4: CD 21                                 int 21h
+[ 319]    07B6: A1 CB 05                              mov ax,[notaMax]
+[ 320]    07B9: E8 30 02                              call print_num
+[ 321]        :                                       
+[ 322]        :                                       
+[ 323]        :                                       ;mostrar nota minima
+[ 324]    07BC: E8 39 03                              call fsalto
+[ 325]    07BF: BA BE 01                              mov dx,offset mensajeMinima
+[ 326]    07C2: B4 09                                 mov ah,09h
+[ 327]    07C4: CD 21                                 int 21h
+[ 328]    07C6: A1 CD 05                              mov ax,[notaMin]
+[ 329]    07C9: E8 20 02                              call print_num
+[ 330]        :                                       
+[ 331]        :                                       
+[ 332]        :                                       ;mostrar aprobados
+[ 333]    07CC: E8 29 03                              call fsalto
+[ 334]    07CF: BA 61 01                              mov dx, offset mensajeAprobados
+[ 335]    07D2: B4 09                                 mov ah, 09h
+[ 336]    07D4: CD 21                                 int 21h
+[ 337]        :                                       
+[ 338]    07D6: A1 A5 05                              mov ax, [aprobados]
+[ 339]    07D9: E8 10 02                              call print_num
+[ 340]        :                                       
+[ 341]        :                                       ;porcentaje aprobados
+[ 342]    07DC: A1 A5 05                              mov ax, [aprobados]
+[ 343]    07DF: BB 64 00                              mov bx, 100
+[ 344]    07E2: F7 E3                                 mul bx              ;DX:AX = aprobados * 100
+[ 345]    07E4: 8A 1E 5E 04                           mov bl, [contadorEst]
+[ 346]    07E8: 32 FF                                 xor bh, bh
+[ 347]    07EA: F7 F3                                 div bx              ;AX = (aprobados*100)/contadorEst
+[ 348]        :                                       
+[ 349]    07EC: 50                                    push ax
+[ 350]    07ED: BA 90 01                              mov dx, offset mensajePorcentaje
+[ 351]    07F0: B4 09                                 mov ah, 09h
+[ 352]    07F2: CD 21                                 int 21h
+[ 353]    07F4: 58                                    pop ax
+[ 354]    07F5: E8 F4 01                              call print_num
+[ 355]    07F8: B2 25                                 mov dl, '%'
+[ 356]    07FA: B4 02                                 mov ah, 02h
+[ 357]    07FC: CD 21                                 int 21h
+[ 358]    07FE: E8 F7 02                              call fsalto
+[ 359]        :                                       
+[ 360]        :                                       ;mostrar reprobados
+[ 361]    0801: BA 78 01                              mov dx, offset mensajeReprobados
+[ 362]    0804: B4 09                                 mov ah, 09h
+[ 363]    0806: CD 21                                 int 21h
+[ 364]        :                                       
+[ 365]    0808: A1 A7 05                              mov ax, [reprobados]
+[ 366]    080B: E8 DE 01                              call print_num
+[ 367]        :                                       
+[ 368]        :                                       ;porcentaje reprobados
+[ 369]    080E: A1 A7 05                              mov ax, [reprobados]
+[ 370]    0811: BB 64 00                              mov bx, 100
+[ 371]    0814: F7 E3                                 mul bx
+[ 372]    0816: 8A 1E 5E 04                           mov bl, [contadorEst]
+[ 373]    081A: 32 FF                                 xor bh, bh
+[ 374]    081C: F7 F3                                 div bx
+[ 375]        :                                       
+[ 376]    081E: 50                                    push ax
+[ 377]    081F: BA 90 01                              mov dx, offset mensajePorcentaje
+[ 378]    0822: B4 09                                 mov ah, 09h
+[ 379]    0824: CD 21                                 int 21h
+[ 380]    0826: 58                                    pop ax
+[ 381]    0827: E8 C2 01                              call print_num
+[ 382]    082A: B2 25                                 mov dl, '%'
+[ 383]    082C: B4 02                                 mov ah,02h
+[ 384]    082E: CD 21                                 int 21h
+[ 385]    0830: E8 C5 02                              call fsalto
+[ 386]        :                                       
+[ 387]    0833: E9 10 FE                              jmp menu
+[ 388]        :                                       
+[ 389]        :                                       
+[ 390]        :                                       ;FUNCION BUSCAR
+[ 391]    0836:                                       buscar:
+[ 392]    0836: E8 F0 01                              call verifyCantidadEst
+[ 393]        :                                       
+[ 394]    0839: BA 98 04                              mov dx, offset preguntaIndice
+[ 395]    083C: B4 09                                 mov ah, 09h
+[ 396]    083E: CD 21                                 int 21h
+[ 397]    0840: E8 B5 02                              call fsalto
+[ 398]        :                                       
+[ 399]    0843: BA CE 01                              mov dx, offset bufferEntrada
+[ 400]    0846: B4 0A                                 mov ah, 0Ah
+[ 401]    0848: CD 21                                 int 21h
+[ 402]    084A: E8 AB 02                              call fsalto
+[ 403]        :                                       
+[ 404]    084D: 8A 0E CF 01                           mov cl, [bufferEntrada+1]
+[ 405]    0851: 80 F9 00                              cmp cl, 0
+[ 406]    0854: 75 03 E9 63 02                        je invalidIndice ;nada escrito
+[ 407]    0859: 80 F9 02                              cmp cl, 2
+[ 408]    085C: 76 03 E9 5B 02                        ja invalidIndice ;no permite mas de 2 caracteres
+[ 409]        :                                       
+[ 410]    0861: BE D0 01                              mov si, offset bufferEntrada+2 ;apunta al primer caracter
+[ 411]        :                                       
+[ 412]        :                                       ;primer digito
+[ 413]    0864: 8A 04                                 mov al, [si]
+[ 414]    0866: 2C 30                                 sub al, '0'
+[ 415]    0868: 73 03 E9 4F 02                        jc invalidIndice
+[ 416]    086D: 3C 09                                 cmp al, 9
+[ 417]    086F: 76 03 E9 48 02                        ja invalidIndice
+[ 418]    0874: 8A D8                                 mov bl, al ;bl=primer digito
+[ 419]        :                                       
+[ 420]    0876: 80 F9 01                              cmp cl, 1
+[ 421]    0879: 74 1F                                 je indice_listo ;solo 1 digito
+[ 422]        :                                       
+[ 423]        :                                       ;segundo digito
+[ 424]    087B: 8A 54 01                              mov dl, [si+1]
+[ 425]    087E: 80 EA 30                              sub dl, '0'
+[ 426]    0881: 73 03 E9 36 02                        jc invalidIndice
+[ 427]    0886: 80 FA 09                              cmp dl, 9
+[ 428]    0889: 76 03 E9 2E 02                        ja invalidIndice
+[ 429]        :                                       
+[ 430]        :                                       ;indice = primerDigito*10 + segundoDigito
+[ 431]    088E: 8A C3                                 mov al,bl ;al = primer digito
+[ 432]    0890: B4 00                                 mov ah,0
+[ 433]    0892: B3 0A                                 mov bl,10
+[ 434]    0894: F6 E3                                 mul bl
+[ 435]    0896: 02 C2                                 add al,dl
+[ 436]    0898: 8A D8                                 mov bl,al
+[ 437]        :                                       
+[ 438]    089A:                                       indice_listo:
+[ 439]        :                                       ;validar rango valido
+[ 440]    089A: 80 FB 01                              cmp bl,1
+[ 441]    089D: 73 03 E9 1A 02                        jb invalidIndice
+[ 442]    08A2: 80 FB 0F                              cmp bl,15
+[ 443]    08A5: 76 03 E9 12 02                        ja invalidIndice
+[ 444]    08AA: A0 5E 04                              mov al,contadorEst
+[ 445]    08AD: 3A D8                                 cmp bl,al
+[ 446]    08AF: 76 03 E9 08 02                        ja invalidIndice
+[ 447]        :                                       
+[ 448]        :                                       ;calcular y mostrar nombre
+[ 449]    08B4: FE CB                                 dec bl
+[ 450]    08B6: B7 00                                 mov bh,0
+[ 451]    08B8: 8B C3                                 mov ax,bx
+[ 452]    08BA: B9 1F 00                              mov cx,31
+[ 453]    08BD: F7 E1                                 mul cx
+[ 454]    08BF: BE F7 01                              mov si,offset arrayNombres
+[ 455]    08C2: 03 F0                                 add si,ax
+[ 456]        :                                       
+[ 457]    08C4: 8B D6                                 mov dx,si
+[ 458]    08C6: B4 09                                 mov ah,09h
+[ 459]    08C8: CD 21                                 int 21h
+[ 460]    08CA: E8 23 02                              call fespacio
+[ 461]        :                                       
+[ 462]        :                                       ;calcular y mostrar nota
+[ 463]    08CD: 8B C3                                 mov ax,bx
+[ 464]    08CF: B9 0A 00                              mov cx,10
+[ 465]    08D2: F7 E1                                 mul cx
+[ 466]    08D4: BF C8 03                              mov di,offset arrayNotas
+[ 467]    08D7: 03 F8                                 add di,ax
+[ 468]        :                                       
+[ 469]    08D9: 8B D7                                 mov dx,di
+[ 470]    08DB: B4 09                                 mov ah,09h
+[ 471]    08DD: CD 21                                 int 21h
+[ 472]    08DF: E8 16 02                              call fsalto
+[ 473]        :                                       
+[ 474]    08E2: E9 61 FD                              jmp menu
+[ 475]        :                                       
+[ 476]        :                                       
+[ 477]        :                                       ;FUNCION SORT
+[ 478]    08E5:                                       sort:
+[ 479]        :                                       
+[ 480]    08E5: E8 41 01                              call verifyCantidadEst
+[ 481]        :                                       
+[ 482]        :                                       ;Convertir notas ASCII a enteros
+[ 483]    08E8: E8 B3 00                              call convertirNotasANum
+[ 484]        :                                       
+[ 485]        :                                       ;Imprimir array de enteros para verificar
+[ 486]    08EB: E8 0A 02                              call fsalto
+[ 487]    08EE: BA DE 05                              mov dx, offset mensajeResul   ; mensaje de verificacion
+[ 488]    08F1: B4 09                                 mov ah,09h
+[ 489]    08F3: CD 21                                 int 21h
+[ 490]    08F5: E8 00 02                              call fsalto
+[ 491]        :                                       
+[ 492]    08F8: 8A 0E 5E 04                           mov cl, [contadorEst]
+[ 493]    08FC: B5 00                                 mov ch,0       ; numero de estudiantes
+[ 494]    08FE: 83 F9 00                              cmp cx,0
+[ 495]    0901: 75 03 E9 DD 01                        je invalidVacio
+[ 496]        :                                       
+[ 497]        :                                       
+[ 498]        :                                       ;Para validar si esta funcionando bien
+[ 499]    0906: BE A9 05                              mov si, offset arrayNotas_num  ; puntero al inicio del array de enteros
+[ 500]    0909:                                       imprimir_enteros:
+[ 501]    0909: 8B 04                                 mov ax, [si]                   ; tomar la nota como entero
+[ 502]    090B: E8 DE 00                              call print_num
+[ 503]    090E: E8 E7 01                              call fsalto
+[ 504]    0911: 83 C6 02                              add si, 2                       ; pasar al siguiente entero
+[ 505]    0914: E2 F3                                 loop imprimir_enteros
+[ 506]        :                                       
+[ 507]        :                                       
+[ 508]    0916: BA 5F 04                              mov dx, offset preguntaSort
+[ 509]    0919: B4 09                                 mov ah,09h
+[ 510]    091B: CD 21                                 int 21h
+[ 511]    091D: E8 D8 01                              call fsalto
+[ 512]        :                                       
+[ 513]    0920: B4 01                                 mov ah,01h
+[ 514]    0922: CD 21                                 int 21h
+[ 515]        :                                       
+[ 516]    0924: 3C 31                                 cmp al,'1'
+[ 517]    0926: 74 04                                 je asc
+[ 518]        :                                       
+[ 519]    0928: 3C 32                                 cmp al,'2'
+[ 520]    092A: 74 26                                 je desc
+[ 521]        :                                       
+[ 522]        :                                       
+[ 523]    092C:                                       asc:
+[ 524]    092C: B9 0E 00                              mov cx,14 ;cantidad de comparaciones
+[ 525]    092F: BE 00 00                              mov si,0
+[ 526]    0932: BF 00 00                              mov di,0
+[ 527]        :                                       
+[ 528]    0935:                                       ciclo1asc:
+[ 529]    0935: 51                                    push cx
+[ 530]    0936: BE CF 05                              lea si, array_notas ;pasa la direccion efectiva
+[ 531]    0939: 8B FE                                 mov di,si
+[ 532]        :                                       
+[ 533]    093B:                                       ciclo2asc:
+[ 534]    093B: 47                                    inc di;incrementa posicion
+[ 535]    093C: 8A 04                                 mov al,[si]
+[ 536]    093E: 3A 05                                 cmp al, [di]
+[ 537]    0940: 77 02                                 ja switch ;short jump
+[ 538]    0942: 72 06                                 jb menor
+[ 539]        :                                       
+[ 540]    0944:                                       switch:
+[ 541]    0944: 8A 25                                 mov ah,[di]
+[ 542]    0946: 88 05                                 mov [di],al
+[ 543]    0948: 88 24                                 mov [si],ah
+[ 544]        :                                       
+[ 545]        :                                       
+[ 546]    094A:                                       menor:
+[ 547]    094A: 46                                    inc si
+[ 548]    094B: E2 EE                                 loop ciclo2asc
+[ 549]    094D: 59                                    pop cx
+[ 550]    094E: E2 E5                                 loop ciclo1asc
+[ 551]    0950: EB 26                                 jmp print
+[ 552]        :                                       
+[ 553]        :                                       
+[ 554]        :                                       
+[ 555]    0952:                                       desc:
+[ 556]    0952: B9 0E 00                              mov cx,14
+[ 557]    0955: BE 00 00                              mov si,0
+[ 558]    0958: BF 00 00                              mov di,0
+[ 559]        :                                       
+[ 560]    095B:                                       ciclo1desc:
+[ 561]    095B: 51                                    push cx
+[ 562]    095C: BE CF 05                              lea si, array_notas
+[ 563]    095F: 8B FE                                 mov di,si
+[ 564]        :                                       
+[ 565]    0961:                                       ciclo2desc:
+[ 566]    0961: 47                                    inc di
+[ 567]    0962: 8A 04                                 mov al,[si]
+[ 568]    0964: 3A 05                                 cmp al, [di]
+[ 569]    0966: 72 02                                 jb switchD
+[ 570]    0968: 77 06                                 ja mayor
+[ 571]        :                                       
+[ 572]    096A:                                       switchD:
+[ 573]    096A: 8A 25                                 mov ah,[di]
+[ 574]    096C: 88 05                                 mov [di],al
+[ 575]    096E: 88 24                                 mov [si],ah
+[ 576]        :                                       
+[ 577]    0970:                                       mayor:
+[ 578]    0970: 46                                    inc si
+[ 579]    0971: E2 EE                                 loop ciclo2desc
+[ 580]    0973: 59                                    pop cx
+[ 581]    0974: E2 E5                                 loop ciclo1desc
+[ 582]    0976: EB 00                                 jmp print
+[ 583]        :                                       
+[ 584]        :                                       
+[ 585]    0978:                                       print:
+[ 586]    0978: BA DE 05                              mov dx, offset mensajeResul
+[ 587]    097B: B4 09                                 mov ah,09h
+[ 588]    097D: CD 21                                 int 21h
+[ 589]    097F: E8 76 01                              call fsalto
+[ 590]        :                                       
+[ 591]    0982: B9 0F 00                              mov cx,15
+[ 592]    0985: BE 00 00                              mov si,0
+[ 593]        :                                       
+[ 594]    0988:                                       print_loop:
+[ 595]    0988: 33 C0                                 xor ax, ax              ; limpiar AX
+[ 596]    098A: 8A 84 CF 05                           mov al, array_notas[si] ; pasar la nota como número
+[ 597]    098E: E8 5B 00                              call print_num
+[ 598]    0991: E8 64 01                              call fsalto
+[ 599]    0994: 46                                    inc si
+[ 600]    0995: E2 F1                                 loop print_loop
+[ 601]    0997: E9 AC FC                              jmp menu
+[ 602]        :                                       
+[ 603]        :                                       
+[ 604]        :                                       ;salir
+[ 605]    099A: B4 4C                                 mov ah,4Ch
+[ 606]    099C: CD 21                                 int 21h
+[ 607]        :                                       
+[ 608]        :                                       
+[ 609]        :                                       
+[ 610]        :                                       
+[ 611]        :                                       
+[ 612]        :                                       
+[ 613]        :                                       
+[ 614]        :                                       
+[ 615]        :                                       ;SUBRUTINAS AUXILIARES
+[ 616]        :                                       
+[ 617]    099E:                                       convertirNotasANum proc
+[ 618]    099E: BE C8 03                              mov si, offset arrayNotas       ; inicio de notas ASCII
+[ 619]    09A1: BF A9 05                              mov di, offset arrayNotas_num   ; inicio de notas enteros
+[ 620]    09A4: 8A 0E 5E 04                           mov cl, [contadorEst]           ; cargar contador de estudiantes (byte)
+[ 621]    09A8: B5 00                                 mov ch, 0                       ; limpiar parte alta de CX
+[ 622]        :                                       
+[ 623]    09AA:                                       conv_loop:
+[ 624]    09AA: 51                                    push cx                     ; guardar contador
+[ 625]    09AB: BB 00 00                              mov bx, 0                   ; limpiar BX (no usado)
+[ 626]    09AE: E8 0D 00                              call leerNota               ; convierte la nota en AX usando SI
+[ 627]        :                                       
+[ 628]    09B1: 89 05                                 mov [di], ax                ; guardar el valor numérico en arrayNotas_num
+[ 629]    09B3: 83 C6 0A                              add si, 10                  ; pasar al siguiente bloque de 10 bytes en arrayNotas
+[ 630]    09B6: 83 C7 02                              add di, 2                   ; pasar al siguiente entero (2 bytes)
+[ 631]        :                                       
+[ 632]    09B9: 59                                    pop cx
+[ 633]    09BA: 49                                    dec cx
+[ 634]    09BB: 75 ED                                 jnz conv_loop
+[ 635]        :                                       
+[ 636]    09BD: C3                                    ret
+[ 637]        :                                       convertirNotasANum endp
+[ 638]        :                                       
+[ 639]        :                                       
+[ 640]    09BE:                                       leerNota proc
+[ 641]    09BE: 33 C0                                 xor ax, ax        ; acumulador de la nota
+[ 642]    09C0: B9 0A 00                              mov cx, 10        ; longitud máxima de la nota (10 bytes)
+[ 643]        :                                       
+[ 644]    09C3:                                       ln_loop:
+[ 645]    09C3: 8A 1D                                 mov bl, [di]      ; caracter actual
+[ 646]    09C5: 80 FB 24                              cmp bl, '$'       ; fin de la cadena
+[ 647]    09C8: 74 21                                 je ln_done
+[ 648]        :                                       
+[ 649]    09CA: 80 FB 30                              cmp bl, '0'
+[ 650]    09CD: 72 18                                 jb ln_skip
+[ 651]    09CF: 80 FB 39                              cmp bl, '9'
+[ 652]    09D2: 77 13                                 ja ln_skip
+[ 653]        :                                       
+[ 654]        :                                       ; AX = AX*10 + (bl-'0')
+[ 655]    09D4: 8B D0                                 mov dx, ax
+[ 656]    09D6: D1 E2                                 shl dx, 1
+[ 657]    09D8: D1 E2                                 shl dx, 1
+[ 658]    09DA: D1 E2                                 shl dx, 1        ; dx = ax*8
+[ 659]    09DC: D1 E0                                 shl ax, 1        ; ax = ax*2
+[ 660]    09DE: 03 C2                                 add ax, dx       ; ax = ax*10
+[ 661]    09E0: 80 EB 30                              sub bl, '0'
+[ 662]    09E3: 32 FF                                 xor bh, bh
+[ 663]    09E5: 03 C3                                 add ax, bx
+[ 664]        :                                       
+[ 665]    09E7:                                       ln_skip:
+[ 666]    09E7: 47                                    inc di
+[ 667]    09E8: 49                                    dec cx
+[ 668]    09E9: 75 D8                                 jnz ln_loop
+[ 669]        :                                       
+[ 670]    09EB:                                       ln_done:
+[ 671]    09EB: C3                                    ret
+[ 672]        :                                       leerNota endp
+[ 673]        :                                       
+[ 674]        :                                       
+[ 675]        :                                       
+[ 676]        :                                       
+[ 677]        :                                       
+[ 678]        :                                       
+[ 679]    09EC:                                       print_num proc
+[ 680]    09EC: 53                                    push bx
+[ 681]    09ED: 51                                    push cx
+[ 682]    09EE: 52                                    push dx
+[ 683]    09EF: 56                                    push si
+[ 684]        :                                       
+[ 685]    09F0: 3D 00 00                              cmp ax, 0
+[ 686]    09F3: 75 08                                 jne pn_loop_start
+[ 687]        :                                       
+[ 688]        :                                       ; caso 0
+[ 689]    09F5: B2 30                                 mov dl, '0'
+[ 690]    09F7: B4 02                                 mov ah, 02h
+[ 691]    09F9: CD 21                                 int 21h
+[ 692]    09FB: EB 1A                                 jmp pn_done
+[ 693]        :                                       
+[ 694]    09FD:                                       pn_loop_start:
+[ 695]    09FD: 33 C9                                 xor cx, cx        ;contador de digitos
+[ 696]        :                                       
+[ 697]    09FF:                                       pn_div_loop:
+[ 698]    09FF: 33 D2                                 xor dx, dx
+[ 699]    0A01: BB 0A 00                              mov bx, 10
+[ 700]    0A04: F7 F3                                 div bx            ; AX = AX/10, DX = AX%10 (residuo)
+[ 701]    0A06: 52                                    push dx           ; guardar residuo
+[ 702]    0A07: 41                                    inc cx
+[ 703]    0A08: 3D 00 00                              cmp ax, 0
+[ 704]    0A0B: 75 F2                                 jne pn_div_loop
+[ 705]        :                                       
+[ 706]    0A0D:                                       pn_print_loop:
+[ 707]    0A0D: 5A                                    pop dx
+[ 708]    0A0E: 80 C2 30                              add dl, '0'
+[ 709]    0A11: B4 02                                 mov ah, 02h
+[ 710]    0A13: CD 21                                 int 21h
+[ 711]    0A15: E2 F6                                 loop pn_print_loop
+[ 712]        :                                       
+[ 713]    0A17:                                       pn_done:
+[ 714]    0A17: 5E                                    pop si
+[ 715]    0A18: 5A                                    pop dx
+[ 716]    0A19: 59                                    pop cx
+[ 717]    0A1A: 5B                                    pop bx
+[ 718]    0A1B: C3                                    ret
+[ 719]        :                                       
+[ 720]        :                                       print_num endp
+[ 721]        :                                       
+[ 722]        :                                       
+[ 723]        :                                       ;FUNCION EXIT
+[ 724]    0A1C:                                       exit:
+[ 725]    0A1C: BA 42 01                              mov dx,offset mensajeSalida
+[ 726]    0A1F: B4 09                                 mov ah,09h
+[ 727]    0A21: CD 21                                 int 21h
+[ 728]        :                                       
+[ 729]    0A23: B4 4C                                 mov ah, 4Ch
+[ 730]    0A25: B0 00                                 mov al, 0
+[ 731]    0A27: CD 21                                 int 21h
+[ 732]        :                                       
+[ 733]        :                                       
+[ 734]        :                                       
+[ 735]        :                                       ;FUNCIONES DE CONDICIONES
+[ 736]    0A29:                                       verifyCantidadEst:
+[ 737]    0A29: 80 3E 5E 04 00                        cmp contadorEst,0
+[ 738]    0A2E: 75 03 E9 B0 00                        je invalidVacio
+[ 739]    0A33: C3                                    ret
+[ 740]        :                                       
+[ 741]    0A34:                                       validarNota proc
+[ 742]    0A34: B8 00 00                              mov ax,0          ; salida por defecto = valido
+[ 743]    0A37: B3 00                                 mov bl,0          ; contador de puntos
+[ 744]    0A39: B7 00                                 mov bh,0          ; contador decimales
+[ 745]    0A3B: B2 00                                 mov dl,0          ; flag punto visto
+[ 746]        :                                       
+[ 747]    0A3D: 8B FE                                 mov di,si         ; DI = puntero que usaremos
+[ 748]    0A3F: 8B E9                                 mov bp,cx         ; BP = longitud que usaremos
+[ 749]        :                                       
+[ 750]    0A41:                                       val_loop:
+[ 751]    0A41: 83 FD 00                              cmp bp,0
+[ 752]    0A44: 74 2F                                 je val_loop_end
+[ 753]    0A46: 8A 05                                 mov al,[di]
+[ 754]        :                                       
+[ 755]    0A48: 3C 2C                                 cmp al,','        ; coma prohibida
+[ 756]    0A4A: 74 58                                 je invalido
+[ 757]        :                                       
+[ 758]    0A4C: 3C 2E                                 cmp al,'.'        ; punto decimal
+[ 759]    0A4E: 74 16                                 je val_punto
+[ 760]        :                                       
+[ 761]    0A50: 3C 30                                 cmp al,'0'        ; rango de digitos
+[ 762]    0A52: 72 50                                 jb invalido
+[ 763]    0A54: 3C 39                                 cmp al,'9'
+[ 764]    0A56: 77 4C                                 ja invalido
+[ 765]        :                                       
+[ 766]    0A58: 80 FA 00                              cmp dl,0          ; si ya hubo punto, contamos decimales
+[ 767]    0A5B: 74 07                                 je val_no_decimal
+[ 768]    0A5D: FE C7                                 inc bh
+[ 769]    0A5F: 80 FF 05                              cmp bh,5
+[ 770]    0A62: 77 40                                 ja invalido
+[ 771]    0A64:                                       val_no_decimal:
+[ 772]        :                                       
+[ 773]    0A64: EB 0B                                 jmp avanzar
+[ 774]        :                                       
+[ 775]    0A66:                                       val_punto:
+[ 776]    0A66: FE C3                                 inc bl
+[ 777]    0A68: 80 FB 01                              cmp bl,1
+[ 778]    0A6B: 77 37                                 ja invalido
+[ 779]    0A6D: B2 01                                 mov dl,1
+[ 780]    0A6F: EB 00                                 jmp avanzar
+[ 781]        :                                       
+[ 782]    0A71:                                       avanzar:
+[ 783]    0A71: 47                                    inc di
+[ 784]    0A72: 4D                                    dec bp
+[ 785]    0A73: EB CC                                 jmp val_loop
+[ 786]        :                                       
+[ 787]    0A75:                                       val_loop_end:
+[ 788]    0A75: 80 FB 01                              cmp bl,1
+[ 789]    0A78: 75 2A                                 jne invalido
+[ 790]        :                                       
+[ 791]        :                                       ; verificar parte entera <= 100
+[ 792]    0A7A: BA 00 00                              mov dx,0
+[ 793]    0A7D: 8B FE                                 mov di,si     ;otra vez desde inicio original
+[ 794]    0A7F: 8B E9                                 mov bp,cx
+[ 795]        :                                       
+[ 796]    0A81:                                       conv_loopV:
+[ 797]    0A81: 83 FD 00                              cmp bp,0
+[ 798]    0A84: 74 15                                 je conv_finV
+[ 799]    0A86: 8A 05                                 mov al,[di]
+[ 800]    0A88: 3C 2E                                 cmp al,'.'
+[ 801]    0A8A: 74 0F                                 je conv_finV
+[ 802]    0A8C: 2C 30                                 sub al,'0'
+[ 803]    0A8E: B4 00                                 mov ah,0
+[ 804]    0A90: BB 0A 00                              mov bx,10
+[ 805]    0A93: F7 E3                                 mul bx
+[ 806]    0A95: 03 D0                                 add dx,ax
+[ 807]    0A97: 47                                    inc di
+[ 808]    0A98: 4D                                    dec bp
+[ 809]    0A99: EB E6                                 jmp conv_loopV
+[ 810]        :                                       
+[ 811]    0A9B:                                       conv_finV:
+[ 812]    0A9B: 83 FA 64                              cmp dx,100
+[ 813]    0A9E: 77 04                                 ja invalido
+[ 814]        :                                       
+[ 815]    0AA0:                                       valido:
+[ 816]    0AA0: B8 00 00                              mov ax,0
+[ 817]    0AA3: C3                                    ret
+[ 818]        :                                       
+[ 819]    0AA4:                                       invalido:
+[ 820]    0AA4: B8 01 00                              mov ax,1
+[ 821]    0AA7: C3                                    ret
+[ 822]        :                                       validarNota endp
+[ 823]        :                                       
+[ 824]        :                                       
+[ 825]        :                                       
+[ 826]    0AA8:                                       invalidSort:
+[ 827]    0AA8: BA B8 04                              mov dx, offset mensajeInvalid
+[ 828]    0AAB: B4 09                                 mov ah, 09h
+[ 829]    0AAD: CD 21                                 int 21h
+[ 830]    0AAF: E9 33 FE                              jmp sort
+[ 831]        :                                       
+[ 832]    0AB2:                                       invalidMenu:
+[ 833]    0AB2: BA B8 04                              mov dx, offset mensajeInvalid
+[ 834]    0AB5: B4 09                                 mov ah,09h
+[ 835]    0AB7: CD 21                                 int 21h
+[ 836]    0AB9: E9 8A FB                              jmp menu
+[ 837]        :                                       
+[ 838]    0ABC:                                       invalidIndice:
+[ 839]    0ABC: BA DC 04                              mov dx, offset mensajeInvalidIndice
+[ 840]    0ABF: B4 09                                 mov ah,09h
+[ 841]    0AC1: CD 21                                 int 21h
+[ 842]    0AC3: E8 32 00                              call fsalto
+[ 843]    0AC6: E9 6D FD                              jmp buscar
+[ 844]        :                                       
+[ 845]    0AC9:                                       invalidFormato:
+[ 846]    0AC9: BA 51 05                              mov dx, offset mensajeInvalidFormato
+[ 847]    0ACC: B4 09                                 mov ah,09h
+[ 848]    0ACE: CD 21                                 int 21h
+[ 849]    0AD0: E8 25 00                              call fsalto
+[ 850]    0AD3: E9 A4 FB                              jmp ingresar
+[ 851]        :                                       
+[ 852]    0AD6:                                       invalidLleno:
+[ 853]    0AD6: BA 06 05                              mov dx, offset mensajeInvalidLleno
+[ 854]    0AD9: B4 09                                 mov ah,09h
+[ 855]    0ADB: CD 21                                 int 21h
+[ 856]    0ADD: E8 18 00                              call fsalto
+[ 857]    0AE0: E9 63 FB                              jmp menu
+[ 858]        :                                       
+[ 859]    0AE3:                                       invalidVacio:
+[ 860]    0AE3: BA 2F 05                              mov dx, offset mensajeInvalidVacio
+[ 861]    0AE6: B4 09                                 mov ah,09h
+[ 862]    0AE8: CD 21                                 int 21h
+[ 863]    0AEA: E8 0B 00                              call fsalto
+[ 864]    0AED: E9 56 FB                              jmp menu
+[ 865]        :                                       
+[ 866]        :                                       
+[ 867]    0AF0:                                       fespacio:
+[ 868]    0AF0: BA 9D 05                              mov dx, offset espacio
+[ 869]    0AF3: B4 09                                 mov ah,09h
+[ 870]    0AF5: CD 21                                 int 21h
+[ 871]    0AF7: C3                                    ret
+[ 872]        :                                       
+[ 873]    0AF8:                                       fsalto:
+[ 874]    0AF8: BA 9A 05                              mov dx, offset salto
+[ 875]    0AFB: B4 09                                 mov ah,09h
+[ 876]    0AFD: CD 21                                 int 21h
+[ 877]    0AFF: C3                                    ret
+[ 878]        :                                       
+[ 879]        :                                       
+[ 880]        :                                       codigo ends
+[ 881]        :                                       end inicio
+[ 882]        :                                       
+[ 883]        :                                       je conv_fin
+[ 884]        :                                       mov al,[di]
+[ 885]        :                                       cmp al,'.'
+[ 886]        :                                       je conv_fin
+[ 887]        :                                       sub al,'0'
+[ 888]        :                                       mov ah,0
+[ 889]        :                                       mov bx,10
+[ 890]        :                                       mul bx
+[ 891]        :                                       add dx,ax
+[ 892]        :                                       inc di
+[ 893]        :                                       dec bp
+[ 894]        :                                       jmp conv_loop
+[ 895]        :                                       
+[ 896]        :                                       conv_fin:
+[ 897]        :                                       cmp dx,100
+[ 898]        :                                       ja invalido
+[ 899]        :                                       
+[ 900]        :                                       valido:
+[ 901]        :                                       mov ax,0
+[ 902]        :                                       ret
+[ 903]        :                                       
+[ 904]        :                                       invalido:
+[ 905]        :                                       mov ax,1
+[ 906]        :                                       ret
+[ 907]        :                                       validarNota endp
+[ 908]        :                                       
+[ 909]        :                                       
+[ 910]        :                                       
+[ 911]        :                                       invalidSort:
+[ 912]        :                                       mov dx, offset mensajeInvalid
+[ 913]        :                                       mov ah, 09h
+[ 914]        :                                       int 21h
+[ 915]        :                                       jmp sort
+[ 916]        :                                       
+[ 917]        :                                       invalidMenu:
+[ 918]        :                                       mov dx, offset mensajeInvalid
+[ 919]        :                                       mov ah,09h
+[ 920]        :                                       int 21h
+[ 921]        :                                       jmp menu
+[ 922]        :                                       
+[ 923]        :                                       invalidIndice:
+[ 924]        :                                       mov dx, offset mensajeInvalidIndice
+[ 925]        :                                       mov ah,09h
+[ 926]        :                                       int 21h
+[ 927]        :                                       call fsalto
+[ 928]        :                                       jmp buscar
+[ 929]        :                                       
+[ 930]        :                                       invalidFormato:
+[ 931]        :                                       mov dx, offset mensajeInvalidFormato
+[ 932]        :                                       mov ah,09h
+[ 933]        :                                       int 21h
+[ 934]        :                                       call fsalto
+[ 935]        :                                       jmp ingresar
+[ 936]        :                                       
+[ 937]        :                                       invalidLleno:
+[ 938]        :                                       mov dx, offset mensajeInvalidLleno
+[ 939]        :                                       mov ah,09h
+[ 940]        :                                       int 21h
+[ 941]        :                                       call fsalto
+[ 942]        :                                       jmp menu
+[ 943]        :                                       
+[ 944]        :                                       invalidVacio:
+[ 945]        :                                       mov dx, offset mensajeInvalidVacio
+[ 946]        :                                       mov ah,09h
+[ 947]        :                                       int 21h
+[ 948]        :                                       call fsalto
+[ 949]        :                                       jmp menu
+[ 950]        :                                       
+[ 951]        :                                       
+[ 952]        :                                       fespacio:
+[ 953]        :                                       mov dx, offset espacio
+[ 954]        :                                       mov ah,09h
+[ 955]        :                                       int 21h
+[ 956]        :                                       ret
+[ 957]        :                                       
+[ 958]        :                                       fsalto:
+[ 959]        :                                       mov dx, offset salto
+[ 960]        :                                       mov ah,09h
+[ 961]        :                                       int 21h
+[ 962]        :                                       ret
+[ 963]        :                                       
+[ 964]        :                                       
+[ 965]        :                                       codigo ends
+[ 966]        :                                       end inicio
+[ 967]        :                                       
+[ 968]        :                                       
+[ 969]        :                                       
+ 
+===================================================================================================
+ 
+EXE HEADER - bytes from 0000 to 01FF inclusive.
+
+0000: 4D      -   exe signature (M)
+0001: 5A      -   exe signature (Z)
+0002: 00      -   bytes on last page (l.byte)
+0003: 01      -   bytes on last page (h.byte)
+0004: 07      -   512 byte pages in file (l.byte)
+0005: 00      -   512 byte pages in file (h.byte)
+0006: 01      -   relocations (l.byte)
+0007: 00      -   relocations (h.byte)
+0008: 20      -   paragraphs in header (l.byte)
+0009: 00      -   paragraphs in header (h.byte)
+000A: 00      -   minimum memory (l.byte)
+000B: 00      -   minimum memory (h.byte)
+000C: FF      -   maximum memory (l.byte)
+000D: FF      -   maximum memory (h.byte)
+000E: 00      -   SS - stack segment (l.byte)
+000F: 00      -   SS - stack segment (h.byte)
+0010: 00      -   SP - stack pointer (l.byte)
+0011: 00      -   SP - stack pointer (h.byte)
+0012: E8      -   check sum (l.byte)
+0013: A3      -   check sum (h.byte)
+0014: 00      -   IP - instruction pointer (l.byte)
+0015: 00      -   IP - instruction pointer (h.byte)
+0016: 63      -   CS - code segment (l.byte)
+0017: 00      -   CS - code segment (h.byte)
+0018: 1E      -   relocation table adress (l.byte)
+0019: 00      -   relocation table adress (h.byte)
+001A: 00      -   overlay number (l.byte)
+001B: 00      -   overlay number (h.byte)
+001C: 01      -   signature (l.byte)
+001D: 00      -   signature (h.byte)
+001E: 06      -   relocation table - offset inside segment (l.byte)
+001F: 00      -   relocation table - offset inside segment (h.byte)
+0020: 63      -   relocation table - segment anchor (l.byte)
+0021: 00      -   relocation table - segment anchor (h.byte)
+0022 to 01FF  -   reserved relocation area  (00) 
+
+
+
+
+===================================================================================================
